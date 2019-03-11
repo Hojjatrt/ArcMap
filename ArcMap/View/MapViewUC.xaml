@@ -9,7 +9,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="30"/>
-            <ColumnDefinition Width="180"/>
+            <ColumnDefinition Width="220"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <esri:MapView x:Name="MyMapView" Grid.Column="1" Grid.ColumnSpan="2"/>
@@ -44,9 +44,10 @@
                 </Button.RenderTransform>
             </Button>
         </StackPanel>
-        <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
+        <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Visible">
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
+                <RowDefinition Height="35"/>
                 <RowDefinition Height="35"/>
                 <RowDefinition Height="35"/>
                 <RowDefinition Height="35"/>
@@ -69,14 +70,30 @@
                       Grid.Row="1" Grid.Column="1"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Margin="5"/>
-            <Button Grid.Row="2" Grid.Column="1"
+            <TextBlock Grid.Row="2" Grid.Column="0" 
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Text="Sketch Color:"/>
+            <ComboBox x:Name="SketchColorComboBox"
+                      Grid.Row="2" Grid.Column="1"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                      Margin="5">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Fill="{Binding Name}" Width="16" Height="16" Margin="0,2,5,2" />
+                            <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Row="3" Grid.Column="1"
                     Content="Draw"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="DrawButtonClick"/>
             <Button x:Name="EditButton" 
-                    Grid.Row="3" Grid.Column="1"
+                    Grid.Row="4" Grid.Column="1"
                     Content="Edit"
                     Margin="5"
                     Width="100" Height="25"
@@ -85,7 +102,7 @@
                     Click="EditButtonClick"/>
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Center" VerticalAlignment="Top"
-                        Grid.Row="5" Grid.Column="1">
+                        Grid.Row="6" Grid.Column="1">
                 <Button Content="Undo"
                         Margin="5"
                         Width="50" Height="25"
@@ -95,26 +112,53 @@
                         Width="50" Height="25"
                         Command="{Binding RedoCommand}"/>
             </StackPanel>
-            <Button Grid.Row="6" Grid.Column="1"
+            <Button Grid.Row="7" Grid.Column="1"
                     Content="Complete"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Command="{Binding CompleteCommand}"/>
-            <Button Grid.Row="8" Grid.Column="1"
+            <Button Grid.Row="9" Grid.Column="1"
                     Content="Cancel"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Command="{Binding CancelCommand}"/>
             <Button x:Name="ClearButton" 
-                    Grid.Row="9" Grid.Column="1"
+                    Grid.Row="10" Grid.Column="1"
                     Content="Clear"
                     Margin="5"
                     Width="100" Height="25"
                     IsEnabled="False"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="ClearButtonClick"/>
+            
         </Grid>
+        <StackPanel x:Name="layers_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
+            <TextBlock Text="Select Layers for display."
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+                <ListView x:Name="LayersListView">
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="esri:ArcGISLayer">
+                            <CheckBox Content="{Binding Name}"
+                                      IsChecked="{Binding IsVisible}"
+                                      Margin="5" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            <TextBlock Text="Select Graphic Layers for display."
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+            <ListView x:Name="GraphicLayersListView">
+                <ListView.ItemTemplate>
+                    <DataTemplate DataType="esri:ArcGISGraphicsOverlay">
+                        <CheckBox Content="{Binding Id}"
+                                      IsChecked="{Binding IsVisible}"
+                                      Margin="5" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
     </Grid>
 </UserControl>

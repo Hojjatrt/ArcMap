@@ -21,21 +21,114 @@ namespace ArcMap.View
     public partial class MapViewUC : UserControl
     {
         // Graphics overlay to host sketch graphics
+        private Map myMap;
         private GraphicsOverlay _sketchOverlay;
+        // Colors.
+        private Color[] colors;
         public MapViewUC()
         {
+            colors = new Color[]
+            {
+                Color.Red,
+                Color.Orange,
+                Color.Yellow,
+                Color.Green,
+                Color.Blue,
+                Color.Indigo,
+                Color.Purple,
+                Color.Black
+            };
+            myMap = new Map();
             InitializeComponent();
             Initialize();
+            InitializeSketch();
         }
 
         private void Initialize()
         {
+            // Create new Map
+
+            // Create the uri for the tiled layer
+            Uri tiledLayerUri = new Uri(
+                "https://sampleserver6.arcgisonline.com/arcgis/rest/services/WorldTimeZones/MapServer");
+
+            // Create a tiled layer using url
+            ArcGISTiledLayer tiledLayer = new ArcGISTiledLayer(tiledLayerUri)
+            {
+                Name = "Tiled Layer"
+            };
+
+            //Add the tiled layer to map
+            myMap.OperationalLayers.Add(tiledLayer);
+
+            Uri serviceUri = new Uri(
+               "https://sampleserver6.arcgisonline.com/arcgis/rest/services/SampleWorldCities/MapServer");
+
+            // Create new image layer from the url
+            ArcGISMapImageLayer imageLayer1 = new ArcGISMapImageLayer(serviceUri)
+            {
+                Name = "World Cities Population",
+                Opacity = 0.5
+            };
+
+            // Add created layer to the basemaps collection
+            myMap.OperationalLayers.Add(imageLayer1);
+
+            // Create the uri for the ArcGISMapImage layer
+            Uri imageLayerUri = new Uri(
+                "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer");
+
+            // Create ArcGISMapImage layer using a url
+            ArcGISMapImageLayer imageLayer = new ArcGISMapImageLayer(imageLayerUri)
+            {
+                Name = "Image Layer",
+
+                // Set the visible scale range for the image layer
+                //MinScale = 40000000,
+                //MaxScale = 2000000
+            };
+
+            // Add the image layer to map
+            myMap.OperationalLayers.Add(imageLayer);
+
+            // Create Uri for feature layer
+            Uri featureLayerUri = new Uri(
+                "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/FeatureServer/0");
+
+            // Create a feature layer using url
+            FeatureLayer myFeatureLayer = new FeatureLayer(featureLayerUri)
+            {
+                Name = "Feature Layer"
+            };
+
+            // Add the feature layer to map
+            myMap.OperationalLayers.Add(myFeatureLayer);
+
+            // Create a map point the map should zoom to
+            MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.WebMercator);
+
+            // Set the initial viewpoint for map
+            myMap.InitialViewpoint = new Viewpoint(mapPoint, 50000000);
+
+            // Event for layer view state changed
+            //MyMapView.LayerViewStateChanged += OnLayerViewStateChanged;
+
+            // Provide used Map to the MapView
+            MyMapView.Map = myMap;
+            LayersListView.ItemsSource = myMap.OperationalLayers;
+        }
+
+        private void InitializeSketch()
+        {
             // Create a light gray canvas map
-            Map myMap = new Map(Basemap.CreateLightGrayCanvas());
+            //Map myMap = new Map(Basemap.CreateLightGrayCanvas());
 
             // Create graphics overlay to display sketch geometry
-            _sketchOverlay = new GraphicsOverlay();
+            _sketchOverlay = new GraphicsOverlay() {
+                Id = "layer 1"
+            };
             MyMapView.GraphicsOverlays.Add(_sketchOverlay);
+            GraphicLayersListView.ItemsSource = MyMapView.GraphicsOverlays;
 
             // Assign the map to the MapView
             MyMapView.Map = myMap;
@@ -43,6 +136,10 @@ namespace ArcMap.View
             // Fill the combo box with choices for the sketch modes (shapes)
             SketchModeComboBox.ItemsSource = Enum.GetValues(typeof(SketchCreationMode));
             SketchModeComboBox.SelectedIndex = 0;
+
+            // Fill the color combo box with choices for the sketch colors
+            SketchColorComboBox.ItemsSource = colors;
+            SketchColorComboBox.SelectedIndex = 0;
 
             // Set the sketch editor configuration to allow vertex editing, resizing, and moving
             SketchEditConfiguration config = MyMapView.SketchEditor.EditConfiguration;
@@ -55,7 +152,7 @@ namespace ArcMap.View
         }
 
         #region Graphic and symbol helpers
-        private Graphic CreateGraphic(Geometry geometry)
+        private Graphic CreateGraphic(Geometry geometry, Color color)
         {
             // Create a graphic to display the specified geometry
             Symbol symbol = null;
@@ -67,9 +164,9 @@ namespace ArcMap.View
                     {
                         symbol = new SimpleLineSymbol()
                         {
-                            Color = Color.Black,
+                            Color = color,
                             Style = SimpleLineSymbolStyle.Solid,
-                            Width = 10
+                            Width = 3
                         };
                         break;
                     }
@@ -78,7 +175,7 @@ namespace ArcMap.View
                     {
                         symbol = new SimpleLineSymbol()
                         {
-                            Color = Color.Red,
+                            Color = color,
                             Style = SimpleLineSymbolStyle.Solid,
                             Width = 5d
                         };
@@ -91,7 +188,7 @@ namespace ArcMap.View
 
                         symbol = new SimpleMarkerSymbol()
                         {
-                            Color = Color.Red,
+                            Color = color,
                             Style = SimpleMarkerSymbolStyle.Circle,
                             Size = 15d
                         };
@@ -133,10 +230,11 @@ namespace ArcMap.View
             {
                 // Let the user draw on the map view using the chosen sketch mode
                 SketchCreationMode creationMode = (SketchCreationMode)SketchModeComboBox.SelectedItem;
+                Color creationColor = colors[SketchColorComboBox.SelectedIndex];
                 Geometry geometry = await MyMapView.SketchEditor.StartAsync(creationMode, true);
 
                 // Create and add a graphic from the geometry the user drew
-                Graphic graphic = CreateGraphic(geometry);
+                Graphic graphic = CreateGraphic(geometry, creationColor);
                 _sketchOverlay.Graphics.Add(graphic);
 
                 // Enable/disable the clear and edit buttons according to whether or not graphics exist in the overlay
@@ -192,14 +290,23 @@ namespace ArcMap.View
         private void draw_sketch_btn_Click(object sender, RoutedEventArgs e)
         {
             if (sketch_panel.Visibility == Visibility.Collapsed)
+            {
+                layers_panel.Visibility = Visibility.Collapsed;
                 sketch_panel.Visibility = Visibility.Visible;
+            }
             else
                 sketch_panel.Visibility = Visibility.Collapsed;
         }
 
         private void layers_btn_Click(object sender, RoutedEventArgs e)
         {
-
+            if (layers_panel.Visibility == Visibility.Collapsed)
+            {
+                sketch_panel.Visibility = Visibility.Collapsed;
+                layers_panel.Visibility = Visibility.Visible;
+            }
+            else
+                layers_panel.Visibility = Visibility.Collapsed;
         }
     }
 }
