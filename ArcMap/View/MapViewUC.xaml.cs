@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Drawing;
 using Point = System.Windows.Point;
-
+using System.Windows.Input;
 
 namespace ArcMap.View
 {
@@ -128,7 +128,17 @@ namespace ArcMap.View
                 Id = "layer 1"
             };
             MyMapView.GraphicsOverlays.Add(_sketchOverlay);
-            GraphicLayersListView.ItemsSource = MyMapView.GraphicsOverlays;
+            _sketchOverlay = new GraphicsOverlay()
+            {
+                Id = "layer 2"
+            };
+            MyMapView.GraphicsOverlays.Add(_sketchOverlay);
+            _sketchOverlay = new GraphicsOverlay()
+            {
+                Id = "layer 3"
+            };
+            MyMapView.GraphicsOverlays.Add(_sketchOverlay);
+            DataGrid_Graphiclayers.ItemsSource = MyMapView.GraphicsOverlays;
 
             // Assign the map to the MapView
             MyMapView.Map = myMap;
@@ -307,6 +317,42 @@ namespace ArcMap.View
             }
             else
                 layers_panel.Visibility = Visibility.Collapsed;
+        }
+
+        private void plusbtn_Click(object sender, RoutedEventArgs e)
+        {
+            GraphicsOverlay g = ((Button)sender).DataContext as GraphicsOverlay;
+            int idx = MyMapView.GraphicsOverlays.IndexOf(g);
+            _sketchOverlay = new GraphicsOverlay()
+            {
+                Id = "layer " + (MyMapView.GraphicsOverlays.Count + 1)
+            };
+            MyMapView.GraphicsOverlays.Insert(idx + 1, _sketchOverlay);
+        }
+
+        private void minesbtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (MyMapView.GraphicsOverlays.Count <= 1)
+            {
+                MessageBox.Show("this is last layer, you can not delete this!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            GraphicsOverlay g = ((Button)sender).DataContext as GraphicsOverlay;
+            if (_sketchOverlay == g)
+            {
+                int idx = MyMapView.GraphicsOverlays.IndexOf(g);
+                if (idx == 0)
+                    idx = 1;
+                else
+                    idx = idx - 1;
+                _sketchOverlay = MyMapView.GraphicsOverlays[idx];
+            }
+            MyMapView.GraphicsOverlays.Remove(g);
+        }
+
+        private void DataGrid_Graphiclayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            DataGrid_Graphiclayers.UnselectAll();
         }
     }
 }

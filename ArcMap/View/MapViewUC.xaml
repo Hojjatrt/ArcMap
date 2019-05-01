@@ -6,6 +6,11 @@
              xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013" 
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="600">
+    <UserControl.Resources>
+        <Style x:Key="myHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="30"/>
@@ -135,25 +140,53 @@
             
         </Grid>
         <StackPanel x:Name="layers_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
-            <TextBlock Text="Select Layers for display."
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-                <ListView x:Name="LayersListView">
-                    <ListView.ItemTemplate>
-                        <DataTemplate DataType="esri:ArcGISLayer">
-                            <CheckBox Content="{Binding Name}"
+            <StackPanel.Resources>
+                <Style x:Key="DataGridUnselectableRowStyle" TargetType="{x:Type DataGridRow}">
+                    <Setter Property="IsSelected" Value="False"/>
+                </Style>
+                <Style x:Key="CellStyle" TargetType="{x:Type DataGridCell}">
+                    <Setter Property="Foreground" Value="Black" />
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{x:Null}" />
+                            <Setter Property="BorderBrush" Value="{x:Null}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+                <DataTemplate x:Key="GraphicOverlayTemplate">
+                    <CheckBox Content="{Binding Id}"
                                       IsChecked="{Binding IsVisible}"
-                                      Margin="5" />
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                                      Margin="5"/>
+                </DataTemplate>
+                <DataTemplate x:Key="PlusBtnTemplate" >
+                    <Button x:Name="plusbtn" Width="30" Background="Green" Content="+" Foreground="White" FontSize="15"
+                            Click="plusbtn_Click"/>
+                </DataTemplate>
+                <DataTemplate x:Key="MinesBtnTemplate" >
+                    <Button x:Name="minesbtn" Width="30" Background="Red" Content="-" Foreground="White" FontSize="15" 
+                            Click="minesbtn_Click"/>
+                </DataTemplate>
+            </StackPanel.Resources>
             <TextBlock Text="Select Graphic Layers for display."
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />
-            <ListView x:Name="GraphicLayersListView">
+            <DataGrid SelectionChanged="DataGrid_Graphiclayers_SelectionChanged" Width="220" 
+                      CellStyle="{StaticResource CellStyle}" AutoGenerateColumns="False" 
+                      x:Name="DataGrid_Graphiclayers" HeadersVisibility="None">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn CellTemplate="{StaticResource GraphicOverlayTemplate}"/>
+                    <DataGridTemplateColumn CellTemplate="{StaticResource PlusBtnTemplate}"/>
+                    <DataGridTemplateColumn CellTemplate="{StaticResource MinesBtnTemplate}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            
+            <TextBlock Text="Select Layers for display."
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+            <ListView x:Name="LayersListView">
                 <ListView.ItemTemplate>
-                    <DataTemplate DataType="esri:ArcGISGraphicsOverlay">
-                        <CheckBox Content="{Binding Id}"
+                    <DataTemplate DataType="esri:ArcGISLayer">
+                        <CheckBox Content="{Binding Name}"
                                       IsChecked="{Binding IsVisible}"
                                       Margin="5" />
                     </DataTemplate>
