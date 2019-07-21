@@ -60,9 +60,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="View\Coordinate.xaml.cs">
-      <DependentUpon>Coordinate.xaml</DependentUpon>
-    </Compile>
     <Compile Include="View\DistanceMeasurement.xaml.cs">
       <DependentUpon>DistanceMeasurement.xaml</DependentUpon>
     </Compile>
@@ -83,10 +80,6 @@
     </Compile>
     <Compile Include="MapViewModel.cs" />
     <Page Include="Resources\ControlStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="View\Coordinate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

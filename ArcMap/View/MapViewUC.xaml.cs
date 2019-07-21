@@ -456,7 +456,6 @@ namespace ArcMap.View
 
         private void MyMapView_MouseMove(object sender, MouseEventArgs e)
         {
-            
             if (start_distance && first != null)
             {
                 MapPoint Point = MyMapView.ScreenToLocation(e.GetPosition(MyMapView));
@@ -480,7 +479,6 @@ namespace ArcMap.View
                 _distanceOverlay.Graphics.Add(graphic);
             }
         }
-
         #region angle meaturment
         static double DegreeBearing(double lat1, double lon1, double lat2, double lon2)
         {
