@@ -32,6 +32,12 @@ namespace ArcMap.View
         private bool start_distance;
         private MapPoint first, last;
         private double _distance,_angle;
+        private WmsLayer _wmsLayer;
+        // Create and hold the URL to the WMS service showing EPA water info
+        private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/wms?");//"https://watersgeo.epa.gov/arcgis/services/OWPROGRAM/SDWIS_WMERC/MapServer/WMSServer?request=GetCapabilities&service=WMS");
+
+        // Create and hold a list of uniquely-identifying WMS layer names to display
+        private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads" };
 
         public MapViewUC()
         {
@@ -53,14 +59,14 @@ namespace ArcMap.View
             InitializeSketch();
         }
 
-        private void Initialize()
+        private async void Initialize()
         {
             // Create new Map
 
             // Create the uri for the tiled layer
             Uri tiledLayerUri = new Uri(
             //"https://sampleserver6.arcgisonline.com/arcgis/rest/services/WorldTimeZones/MapServer");
-            "http://localhost:6060/geoserver/test/wms");
+            "http://localhost:6060/geoserver/wms");
 
             // Create a tiled layer using url
             ArcGISTiledLayer tiledLayer = new ArcGISTiledLayer(tiledLayerUri)
@@ -71,7 +77,7 @@ namespace ArcMap.View
             //Add the tiled layer to map
             //myMap.OperationalLayers.Add(tiledLayer);
 
-            Uri serviceUri = new Uri("http://localhost:6060/geoserver/test/wms");
+            Uri serviceUri = new Uri("http://localhost:6060/geoserver/wms");
             //"https://sampleserver6.arcgisonline.com/arcgis/rest/services/SampleWorldCities/MapServer");
 
             // Create new image layer from the url
@@ -82,7 +88,7 @@ namespace ArcMap.View
             };
 
             // Add created layer to the basemaps collection
-            myMap.OperationalLayers.Add(imageLayer1);
+            //myMap.OperationalLayers.Add(imageLayer1);
 
             // Create the uri for the ArcGISMapImage layer
             Uri imageLayerUri = new Uri(
@@ -110,16 +116,26 @@ namespace ArcMap.View
             {
                 Name = "Feature Layer"
             };
-
+            // Apply an imagery basemap to the map
+            //myMap.Basemap = Basemap.CreateImagery();
             // Add the feature layer to map
-            //myMap.OperationalLayers.Add(myFeatureLayer);
+            myMap.OperationalLayers.Add(myFeatureLayer);
+
+            // Create a new WMS layer displaying the specified layers from the service
+            _wmsLayer = new WmsLayer(_wmsUrl, _wmsLayerNames);
+
+            // Load the layer
+            await _wmsLayer.LoadAsync();
+
+            // Add the layer to the map
+            myMap.OperationalLayers.Add(_wmsLayer);
 
             // Create a map point the map should zoom to
             MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.WebMercator);
 
             // Set the initial viewpoint for map
             myMap.InitialViewpoint = new Viewpoint(mapPoint, 50000000);
-            myMap.Basemap = Basemap.CreateNationalGeographic();
+            //myMap.Basemap = Basemap.CreateNationalGeographic();
             // Event for layer view state changed
             //MyMapView.LayerViewStateChanged += OnLayerViewStateChanged;
 
