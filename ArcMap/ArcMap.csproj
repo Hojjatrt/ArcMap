@@ -40,6 +40,8 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -58,6 +60,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="View\Coordinate.xaml.cs">
+      <DependentUpon>Coordinate.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\DistanceMeasurement.xaml.cs">
+      <DependentUpon>DistanceMeasurement.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\MapViewUC.xaml.cs">
       <DependentUpon>MapViewUC.xaml</DependentUpon>
     </Compile>
@@ -75,6 +83,14 @@
     </Compile>
     <Compile Include="MapViewModel.cs" />
     <Page Include="Resources\ControlStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Coordinate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\DistanceMeasurement.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -112,7 +128,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISRuntime.WPF">
-      <Version>100.4.0</Version>
+      <Version>100.3.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />

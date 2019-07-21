@@ -48,6 +48,19 @@
                     </TransformGroup>
                 </Button.RenderTransform>
             </Button>
+            <Button x:Name="distance_btn" Content="Ruler" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="distance_btn_Click">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
+                        <GradientStop Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}" Offset="0.099"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+                <Button.RenderTransform>
+                    <TransformGroup>
+                        <RotateTransform Angle="90"/>
+                    </TransformGroup>
+                </Button.RenderTransform>
+            </Button>
         </StackPanel>
         <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Visible">
             <Grid.RowDefinitions>
@@ -192,6 +205,31 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+        </StackPanel>
+        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Visible">
+            <StackPanel.Background>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
+            </StackPanel.Background>
+            <TextBlock Text="Select lat and lng to show distance."
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+            <Button x:Name="start_distance_btn" Content="Start Distance" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="start_distance_btn_Click">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
+                        <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <TextBlock x:Name="coordinate_text" Text="Coordinates:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+            <TextBlock x:Name="distance_text" Text="Distance:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
+            <TextBlock x:Name="angle_text" Text="Radial/Bearing:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="0,10" />
         </StackPanel>
     </Grid>
 </UserControl>
