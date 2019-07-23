@@ -206,7 +206,7 @@
                 </ListView.ItemTemplate>
             </ListView>
         </StackPanel>
-        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Visible">
+        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Collapsed">
             <StackPanel.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
             </StackPanel.Background>

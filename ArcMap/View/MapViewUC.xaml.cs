@@ -23,6 +23,7 @@ namespace ArcMap.View
     /// </summary>
     public partial class MapViewUC : UserControl
     {
+        #region parameters
         // Graphics overlay to host sketch graphics
         private Map myMap;
         private GraphicsOverlay _sketchOverlay;
@@ -38,7 +39,7 @@ namespace ArcMap.View
 
         // Create and hold a list of uniquely-identifying WMS layer names to display
         private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads" };
-
+        #endregion
         public MapViewUC()
         {
             colors = new Color[]
@@ -121,12 +122,18 @@ namespace ArcMap.View
             // Add the feature layer to map
             myMap.OperationalLayers.Add(myFeatureLayer);
 
-            // Create a new WMS layer displaying the specified layers from the service
-            _wmsLayer = new WmsLayer(_wmsUrl, _wmsLayerNames);
+            try
+            {
+                // Create a new WMS layer displaying the specified layers from the service
+                _wmsLayer = new WmsLayer(_wmsUrl, _wmsLayerNames);
+                // Load the layer
+                await _wmsLayer.LoadAsync();
+            }
+            catch (Exception)
+            {
 
-            // Load the layer
-            await _wmsLayer.LoadAsync();
-
+                MessageBox.Show("Layer names not set!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             // Add the layer to the map
             myMap.OperationalLayers.Add(_wmsLayer);
 
@@ -143,7 +150,6 @@ namespace ArcMap.View
             MyMapView.Map = myMap;
             LayersListView.ItemsSource = myMap.OperationalLayers;
         }
-
         private void InitializeDistance()
         {
             // Add a graphics overlay for showing the tapped point.
@@ -261,71 +267,8 @@ namespace ArcMap.View
             return graphic;
         }
         #endregion
-
-        private void MapView_Tapped(object sender, GeoViewInputEventArgs e)
-        {
-            // Get the tapped point - this is in the map's spatial reference,
-            // which in this case is WebMercator because that is the SR used by the included basemaps.
-            //MapPoint tappedPoint = e.Location;
-            MapPoint tappedPoint = MyMapView.ScreenToLocation(e.Position);
-            // Update the graphics.
-            //if (last != null && start_distance)
-            //{
-            //    end_distance_btn.Command.Execute(end_distance_btn.CommandParameter);
-            //    start_distance = false;
-            //}
-            if (start_distance == true)
-            {
-                _distanceOverlay.Graphics.Clear();
-                //// Project the point to WGS84
-                MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(tappedPoint, SpatialReferences.Wgs84);
-                if (first == null)
-                    first = projectedPoint;
-                else
-                {
-                    last = projectedPoint;
-                    _distanceOverlay.Graphics.Add(new Graphic(first));
-                    
-                }
-                _distanceOverlay.Graphics.Add(new Graphic(tappedPoint));
-                
-
-
-                // Format the results in strings.
-                //string originalCoords = string.Format("Original: {0:F4}, {1:F4}", tappedPoint.X, tappedPoint.Y);
-                //MessageBox.Show(tappedPoint.GeometryType.ToString());
-                string projectedCoords = string.Format("Projected: {0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
-                string formattedString = string.Format("{0}", projectedCoords);
-
-                //Define a callout and show it in the map view.
-
-                if (projectedPoint == first)
-                {
-                    CalloutDefinition calloutDef = new CalloutDefinition("Coordinates:", formattedString);
-                    MyMapView.ShowCalloutAt(tappedPoint, calloutDef);
-                }
-                else
-                {
-                    coordinate_text.Text = formattedString;
-                    _distance = distance(first.Y, first.X, last.Y, last.X, 'N');
-                    distance_text.Text = _distance.ToString();
-                    _angle = DegreeBearing(first.Y, first.X, last.Y, last.X);
-                    angle_text.Text = _angle.ToString();
-                    MapPoint[] arr = new MapPoint[2];
-                    arr[0] = first;
-                    arr[1] = last;
-                    Polyline pline = new Polyline(arr);
-                    Color creationColor = Color.Red;
-                    // Create and add a graphic from the geometry the user drew
-                    Graphic graphic = CreateGraphic(pline, creationColor);
-                    _distanceOverlay.Graphics.Add(graphic);
-                    start_distance = false;
-
-                }
-
-            }
-        }
-
+        
+        #region edit graphic btns
         private async void DrawButtonClick(object sender, RoutedEventArgs e)
         {
             try
@@ -388,6 +331,7 @@ namespace ArcMap.View
                 MessageBox.Show("Error editing shape: " + ex.Message);
             }
         }
+        #endregion
 
         #region panel_btns
         private void draw_sketch_btn_Click(object sender, RoutedEventArgs e)
@@ -426,6 +370,8 @@ namespace ArcMap.View
                 distance_panel.Visibility = Visibility.Collapsed;
         }
         #endregion
+
+        #region edit layers btns
         private void plusbtn_Click(object sender, RoutedEventArgs e)
         {
             GraphicsOverlay g = ((Button)sender).DataContext as GraphicsOverlay;
@@ -461,7 +407,9 @@ namespace ArcMap.View
         {
             DataGrid_Graphiclayers.UnselectAll();
         }
+        #endregion
 
+        #region Ruler parts
         private void start_distance_btn_Click(object sender, RoutedEventArgs e)
         {
             _distanceOverlay.Graphics.Clear();
@@ -469,7 +417,69 @@ namespace ArcMap.View
             start_distance = true;
             first = last = null;
         }
+        private void MapView_Tapped(object sender, GeoViewInputEventArgs e)
+        {
+            // Get the tapped point - this is in the map's spatial reference,
+            // which in this case is WebMercator because that is the SR used by the included basemaps.
+            //MapPoint tappedPoint = e.Location;
+            MapPoint tappedPoint = MyMapView.ScreenToLocation(e.Position);
+            // Update the graphics.
+            //if (last != null && start_distance)
+            //{
+            //    end_distance_btn.Command.Execute(end_distance_btn.CommandParameter);
+            //    start_distance = false;
+            //}
+            if (start_distance == true)
+            {
+                _distanceOverlay.Graphics.Clear();
+                //// Project the point to WGS84
+                MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(tappedPoint, SpatialReferences.Wgs84);
+                if (first == null)
+                    first = projectedPoint;
+                else
+                {
+                    last = projectedPoint;
+                    _distanceOverlay.Graphics.Add(new Graphic(first));
 
+                }
+                _distanceOverlay.Graphics.Add(new Graphic(tappedPoint));
+
+
+
+                // Format the results in strings.
+                //string originalCoords = string.Format("Original: {0:F4}, {1:F4}", tappedPoint.X, tappedPoint.Y);
+                //MessageBox.Show(tappedPoint.GeometryType.ToString());
+                string projectedCoords = string.Format("Projected: {0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
+                string formattedString = string.Format("{0}", projectedCoords);
+
+                //Define a callout and show it in the map view.
+
+                if (projectedPoint == first)
+                {
+                    CalloutDefinition calloutDef = new CalloutDefinition("Coordinates:", formattedString);
+                    MyMapView.ShowCalloutAt(tappedPoint, calloutDef);
+                }
+                else
+                {
+                    coordinate_text.Text = formattedString;
+                    _distance = distance(first.Y, first.X, last.Y, last.X, 'N');
+                    distance_text.Text = _distance.ToString();
+                    _angle = DegreeBearing(first.Y, first.X, last.Y, last.X);
+                    angle_text.Text = _angle.ToString();
+                    MapPoint[] arr = new MapPoint[2];
+                    arr[0] = first;
+                    arr[1] = last;
+                    Polyline pline = new Polyline(arr);
+                    Color creationColor = Color.Red;
+                    // Create and add a graphic from the geometry the user drew
+                    Graphic graphic = CreateGraphic(pline, creationColor);
+                    _distanceOverlay.Graphics.Add(graphic);
+                    start_distance = false;
+
+                }
+
+            }
+        }
         private void MyMapView_MouseMove(object sender, MouseEventArgs e)
         {
             if (start_distance && first != null)
@@ -495,6 +505,8 @@ namespace ArcMap.View
                 _distanceOverlay.Graphics.Add(graphic);
             }
         }
+        #endregion
+
         #region angle meaturment
         static double DegreeBearing(double lat1, double lon1, double lat2, double lon2)
         {
