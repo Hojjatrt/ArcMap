@@ -62,7 +62,7 @@
                 </Button.RenderTransform>
             </Button>
         </StackPanel>
-        <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Visible">
+        <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="35"/>
@@ -206,7 +206,7 @@
                 </ListView.ItemTemplate>
             </ListView>
         </StackPanel>
-        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Collapsed">
+        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Visible">
             <StackPanel.Background>
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
             </StackPanel.Background>
@@ -224,6 +224,11 @@
             <TextBlock x:Name="coordinate_text" Text="Coordinates:"
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />
+            <ComboBox x:Name="distance_type_combo" Margin="10,5" Text="Please select a type" SelectionChanged="distance_type_combo_SelectionChanged">
+                <ComboBoxItem IsSelected="True" Name="cbi1">Nautical Mile</ComboBoxItem>
+                <ComboBoxItem Name="cbi2">Kilometre</ComboBoxItem>
+                <ComboBoxItem Name="cbi3">Mile</ComboBoxItem>
+            </ComboBox>
             <TextBlock x:Name="distance_text" Text="Distance:"
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />

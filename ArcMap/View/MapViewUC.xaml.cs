@@ -30,9 +30,12 @@ namespace ArcMap.View
         private GraphicsOverlay _distanceOverlay;
         // Colors.
         private Color[] colors;
+        // Distance variables
         private bool start_distance;
         private MapPoint first, last;
         private double _distance,_angle;
+        private string distance_type;
+
         private WmsLayer _wmsLayer;
         // Create and hold the URL to the WMS service showing EPA water info
         private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/wms?");//"https://watersgeo.epa.gov/arcgis/services/OWPROGRAM/SDWIS_WMERC/MapServer/WMSServer?request=GetCapabilities&service=WMS");
@@ -60,6 +63,7 @@ namespace ArcMap.View
             InitializeSketch();
         }
 
+        #region Initialize
         private async void Initialize()
         {
             // Create new Map
@@ -155,6 +159,7 @@ namespace ArcMap.View
             // Add a graphics overlay for showing the tapped point.
             _distanceOverlay = new GraphicsOverlay();
             start_distance = false;
+            distance_type = "NM";
             SimpleMarkerSymbol markerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle.Circle, Color.Black, 5);
             _distanceOverlay.Renderer = new SimpleRenderer(markerSymbol);
             MyMapView.GraphicsOverlays.Add(_distanceOverlay);
@@ -194,6 +199,7 @@ namespace ArcMap.View
             // Set the sketch editor as the page's data context
             DataContext = MyMapView.SketchEditor;
         }
+        #endregion
 
         #region Graphic and symbol helpers
         private Graphic CreateGraphic(Geometry geometry, Color color)
@@ -424,15 +430,11 @@ namespace ArcMap.View
             //MapPoint tappedPoint = e.Location;
             MapPoint tappedPoint = MyMapView.ScreenToLocation(e.Position);
             // Update the graphics.
-            //if (last != null && start_distance)
-            //{
-            //    end_distance_btn.Command.Execute(end_distance_btn.CommandParameter);
-            //    start_distance = false;
-            //}
             if (start_distance == true)
             {
                 _distanceOverlay.Graphics.Clear();
-                //// Project the point to WGS84
+
+                // Project the point to WGS84
                 MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(tappedPoint, SpatialReferences.Wgs84);
                 if (first == null)
                     first = projectedPoint;
@@ -440,42 +442,24 @@ namespace ArcMap.View
                 {
                     last = projectedPoint;
                     _distanceOverlay.Graphics.Add(new Graphic(first));
-
                 }
                 _distanceOverlay.Graphics.Add(new Graphic(tappedPoint));
-
-
-
+                
                 // Format the results in strings.
-                //string originalCoords = string.Format("Original: {0:F4}, {1:F4}", tappedPoint.X, tappedPoint.Y);
-                //MessageBox.Show(tappedPoint.GeometryType.ToString());
-                string projectedCoords = string.Format("Projected: {0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
-                string formattedString = string.Format("{0}", projectedCoords);
+                string projectedCoords = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
 
                 //Define a callout and show it in the map view.
 
                 if (projectedPoint == first)
                 {
-                    CalloutDefinition calloutDef = new CalloutDefinition("Coordinates:", formattedString);
+                    CalloutDefinition calloutDef = new CalloutDefinition("Coordinate:",
+                        string.Format("{0} : {1}", "Start", projectedCoords));
                     MyMapView.ShowCalloutAt(tappedPoint, calloutDef);
                 }
                 else
                 {
-                    coordinate_text.Text = formattedString;
-                    _distance = distance(first.Y, first.X, last.Y, last.X, 'N');
-                    distance_text.Text = _distance.ToString();
-                    _angle = DegreeBearing(first.Y, first.X, last.Y, last.X);
-                    angle_text.Text = _angle.ToString();
-                    MapPoint[] arr = new MapPoint[2];
-                    arr[0] = first;
-                    arr[1] = last;
-                    Polyline pline = new Polyline(arr);
-                    Color creationColor = Color.Red;
-                    // Create and add a graphic from the geometry the user drew
-                    Graphic graphic = CreateGraphic(pline, creationColor);
-                    _distanceOverlay.Graphics.Add(graphic);
+                    Show_results(projectedPoint);
                     start_distance = false;
-
                 }
 
             }
@@ -485,24 +469,54 @@ namespace ArcMap.View
             if (start_distance && first != null)
             {
                 MapPoint Point = MyMapView.ScreenToLocation(e.GetPosition(MyMapView));
-                _distanceOverlay.Graphics.Clear();
-                //// Project the point to WGS84
                 MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(Point, SpatialReferences.Wgs84);
-                string projectedCoords = string.Format("Projected: {0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
-                string formattedString = string.Format("{0}", projectedCoords);
-                coordinate_text.Text = formattedString;
-                _distance = distance(first.Y, first.X, projectedPoint.Y, projectedPoint.X, 'N');
-                distance_text.Text = _distance.ToString();
-                _angle = DegreeBearing(first.Y, first.X, projectedPoint.Y, projectedPoint.X);
-                angle_text.Text = _angle.ToString();
-                MapPoint[] arr = new MapPoint[2];
-                arr[0] = first;
-                arr[1] = projectedPoint;
-                Polyline pline = new Polyline(arr);
-                Color creationColor = Color.Red;
-                // Create and add a graphic from the geometry the user drew
-                Graphic graphic = CreateGraphic(pline, creationColor);
-                _distanceOverlay.Graphics.Add(graphic);
+                _distanceOverlay.Graphics.Clear();
+                Show_results(projectedPoint);
+            }
+        }
+        private void Show_results(MapPoint projectedPoint)
+        {
+            // Format the results in strings.
+            string projectedCoords = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
+
+            // show the results in the text blocks
+            coordinate_text.Text = string.Format("{0} : {1}", "End", projectedCoords);
+            _distance = distance(first.Y, first.X, projectedPoint.Y, projectedPoint.X, distance_type[0]);
+            distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
+                _distance, distance_type);
+            _angle = DegreeBearing(first.Y, first.X, projectedPoint.Y, projectedPoint.X);
+            angle_text.Text = string.Format("{0} : {1:F0}", "Radial/Bearing", _angle);
+
+            MapPoint[] arr = new MapPoint[2];
+            arr[0] = first;
+            arr[1] = projectedPoint;
+            Polyline pline = new Polyline(arr);
+            Color creationColor = Color.Red;
+            // Create and add a graphic from the geometry the user drew
+            Graphic graphic = CreateGraphic(pline, creationColor);
+            _distanceOverlay.Graphics.Add(graphic);
+        }
+        private void distance_type_combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (distance_type_combo.SelectedIndex)
+            {
+                case 0:
+                    distance_type = "NM";
+                    break;
+                case 1:
+                    distance_type = "Km";
+                    break;
+                case 2:
+                    distance_type = "M";
+                    break;
+                default:
+                    break;
+            }
+            if (first != null && last != null)
+            {
+                _distance = distance(first.Y, first.X, last.Y, last.X, distance_type[0]);
+                distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
+                    _distance, distance_type);
             }
         }
         #endregion
