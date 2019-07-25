@@ -15,6 +15,9 @@ using System.Windows.Input;
 using Esri.ArcGISRuntime.UI.Controls;
 using Color = System.Drawing.Color;
 using Esri.ArcGISRuntime.UI.GeoAnalysis;
+using System.Windows.Media.Imaging;
+using System.IO;
+using System.Drawing.Imaging;
 
 namespace ArcMap.View
 {
@@ -41,7 +44,7 @@ namespace ArcMap.View
         private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/wms?");//"https://watersgeo.epa.gov/arcgis/services/OWPROGRAM/SDWIS_WMERC/MapServer/WMSServer?request=GetCapabilities&service=WMS");
 
         // Create and hold a list of uniquely-identifying WMS layer names to display
-        private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads" };
+        private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads", "test:DEM_of_Iran_30m" };
         #endregion
         public MapViewUC()
         {
@@ -145,13 +148,18 @@ namespace ArcMap.View
             MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.WebMercator);
 
             // Set the initial viewpoint for map
-            myMap.InitialViewpoint = new Viewpoint(mapPoint, 50000000);
+            //myMap.InitialViewpoint = new Viewpoint(57.22, 29.1, 8762.7156655228955);
             //myMap.Basemap = Basemap.CreateNationalGeographic();
             // Event for layer view state changed
             //MyMapView.LayerViewStateChanged += OnLayerViewStateChanged;
 
             // Provide used Map to the MapView
             MyMapView.Map = myMap;
+            // Set Viewpoint so that it is centered on the London coordinates defined above
+            await MyMapView.SetViewpointCenterAsync(29.70, 57.22);
+
+            // Set the Viewpoint scale to match the specified scale 
+            await MyMapView.SetViewpointScaleAsync(876000);
             LayersListView.ItemsSource = myMap.OperationalLayers;
         }
         private void InitializeDistance()
@@ -165,6 +173,12 @@ namespace ArcMap.View
             MyMapView.GraphicsOverlays.Add(_distanceOverlay);
             // Respond to user taps.
             MyMapView.GeoViewTapped += MapView_Tapped;
+
+            //Tiff2Text.ExifMetadata(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test.txt");
+            //Tiff2Text.EnumratesTiffTags(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test2.txt");
+            //Tiff2Text.PrintDirectiory(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test3.txt");
+            Tiff2Text.RgbShow(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test4.bmp");
+
         }
         private void InitializeSketch()
         {
