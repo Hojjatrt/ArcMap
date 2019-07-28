@@ -36,7 +36,7 @@ namespace ArcMap.View
         // Distance variables
         private bool start_distance;
         private MapPoint first, last;
-        private double _distance,_angle;
+        private double _distance, _angle;
         private string distance_type;
 
         private WmsLayer _wmsLayer;
@@ -270,7 +270,7 @@ namespace ArcMap.View
             return graphic;
         }
         #endregion
-        
+
         #region edit graphic btns
         private async void DrawButtonClick(object sender, RoutedEventArgs e)
         {
@@ -425,7 +425,7 @@ namespace ArcMap.View
                     _distanceOverlay.Graphics.Add(new Graphic(first));
                 }
                 _distanceOverlay.Graphics.Add(new Graphic(tappedPoint));
-                
+
                 // Format the results in strings.
                 string projectedCoords = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
 
@@ -578,6 +578,22 @@ namespace ArcMap.View
                 return (dist);
             }
         }
+        #endregion
+
+        #region ZoomBtns
+
+        private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Viewpoint viewpoint = MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale);
+            await MyMapView.SetViewpointScaleAsync(viewpoint.TargetScale - 100000);
+        }
+
+        private async void ZoomOut_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Viewpoint viewpoint = MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale);
+            await MyMapView.SetViewpointScaleAsync(viewpoint.TargetScale + 100000);
+        }
+
         #endregion
     }
 }
