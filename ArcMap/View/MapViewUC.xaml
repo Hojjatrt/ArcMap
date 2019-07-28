@@ -5,112 +5,144 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013" 
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="600">
+             d:DesignHeight="800" d:DesignWidth="800">
     <UserControl.Resources>
         <Style x:Key="myHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Visibility" Value="Collapsed" />
         </Style>
     </UserControl.Resources>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="30"/>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <esri:MapView x:Name="MyMapView" Grid.Column="1" Grid.ColumnSpan="2" MouseMove="MyMapView_MouseMove"/>
-        <StackPanel Grid.Column="0" Width="30">
-            <StackPanel.Background>
-                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
-            </StackPanel.Background>
-            <Button x:Name="draw_sketch_btn" Content="Draw Sketch" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="draw_sketch_btn_Click">
-                <Button.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                        <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
-                    </LinearGradientBrush>
-                </Button.Background>
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <RotateTransform Angle="90"/>
-                    </TransformGroup>
-                </Button.RenderTransform>
+    <DockPanel Background="Gray">
+        <ToolBar DockPanel.Dock="Top" Height="28">
+            <Border BorderThickness="1" BorderBrush="#FF0EA7FF">
+                <TextBox Width="218"></TextBox>
+            </Border>
+            <Button ToolTip="Search">
+                <Image Source="/Icons/search_32x32.png"/>
             </Button>
-            <Button x:Name="layers_btn" Content="Layers" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="layers_btn_Click">
-                <Button.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                        <GradientStop Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}" Offset="0.099"/>
-                    </LinearGradientBrush>
-                </Button.Background>
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <RotateTransform Angle="90"/>
-                    </TransformGroup>
-                </Button.RenderTransform>
+            <Button x:Name="Ruler_btn" ToolTip="Ruler" Click="Ruler_btn_Click">
+                <Image Source="/Icons/ruler_32x32.png"/>
             </Button>
-            <Button x:Name="distance_btn" Content="Ruler" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="distance_btn_Click">
-                <Button.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                        <GradientStop Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}" Offset="0.099"/>
-                    </LinearGradientBrush>
-                </Button.Background>
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <RotateTransform Angle="90"/>
-                    </TransformGroup>
-                </Button.RenderTransform>
-            </Button>
-        </StackPanel>
-        <Grid x:Name="sketch_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="50"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="20"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="20"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition Height="35"/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+        </ToolBar>
+        <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="30"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="1" Grid.Column="0" 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="20"/>
+            </Grid.RowDefinitions>
+            <esri:MapView x:Name="MyMapView" Grid.RowSpan="3" Grid.Column="1" Grid.ColumnSpan="3" MouseMove="MyMapView_MouseMove" MouseRightButtonDown="MyMapView_MouseRightButtonDown"/>
+            <StackPanel x:Name="distance_panel" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Visibility="Collapsed" Orientation="Horizontal">
+                <StackPanel.Background>
+                    <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
+                </StackPanel.Background>
+                <!--<Button x:Name="start_distance_btn" Content="Start Distance" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,5" Click="start_distance_btn_Click">
+                    <Button.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
+                            <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                </Button>-->
+                <TextBlock x:Name="coordinate_text" Text="Coordinates:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="50,5,50,5" />
+                <ComboBox x:Name="distance_type_combo" Margin="50,5" Text="Please select a type" SelectionChanged="distance_type_combo_SelectionChanged">
+                    <ComboBoxItem IsSelected="True" Name="cbi1">Nautical Mile</ComboBoxItem>
+                    <ComboBoxItem Name="cbi2">Kilometre</ComboBoxItem>
+                    <ComboBoxItem Name="cbi3">Mile</ComboBoxItem>
+                </ComboBox>
+                <TextBlock x:Name="distance_text" Text="Distance:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="50,5" />
+                <TextBlock x:Name="angle_text" Text="Radial/Bearing:"
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
+                           Margin="50,5" />
+            </StackPanel>
+            <StackPanel Grid.Column="0" Grid.RowSpan="3" Width="30">
+                <StackPanel.Background>
+                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
+                </StackPanel.Background>
+                <Button x:Name="draw_sketch_btn" Content="Draw Sketch" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="draw_sketch_btn_Click">
+                    <Button.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
+                            <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <RotateTransform Angle="90"/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                </Button>
+                <Button x:Name="layers_btn" Content="Layers" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="layers_btn_Click">
+                    <Button.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
+                            <GradientStop Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}" Offset="0.099"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <RotateTransform Angle="90"/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                </Button>
+            </StackPanel>
+            <Grid x:Name="sketch_panel" Grid.Column="1" Grid.RowSpan="3" Background="#FFDEDEDE" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition Height="35"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="1" Grid.Column="0" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
                        Text="Sketch shape:"/>
-            <ComboBox x:Name="SketchModeComboBox"
+                <ComboBox x:Name="SketchModeComboBox"
                       Grid.Row="1" Grid.Column="1"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Margin="5"/>
-            <TextBlock Grid.Row="2" Grid.Column="0" 
+                <TextBlock Grid.Row="2" Grid.Column="0" 
                        HorizontalAlignment="Right" VerticalAlignment="Center"
                        Text="Sketch Color:"/>
-            <ComboBox x:Name="SketchColorComboBox"
+                <ComboBox x:Name="SketchColorComboBox"
                       Grid.Row="2" Grid.Column="1"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Margin="5">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Rectangle Fill="{Binding Name}" Width="16" Height="16" Margin="0,2,5,2" />
-                            <TextBlock Text="{Binding Name}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-            <Button Grid.Row="3" Grid.Column="1"
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Fill="{Binding Name}" Width="16" Height="16" Margin="0,2,5,2" />
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Row="3" Grid.Column="1"
                     Content="Draw"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="DrawButtonClick"/>
-            <Button x:Name="EditButton" 
+                <Button x:Name="EditButton" 
                     Grid.Row="4" Grid.Column="1"
                     Content="Edit"
                     Margin="5"
@@ -118,31 +150,31 @@
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     IsEnabled="False"
                     Click="EditButtonClick"/>
-            <StackPanel Orientation="Horizontal"
+                <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Center" VerticalAlignment="Top"
                         Grid.Row="6" Grid.Column="1">
-                <Button Content="Undo"
+                    <Button Content="Undo"
                         Margin="5"
                         Width="50" Height="25"
                         Command="{Binding UndoCommand}"/>
-                <Button Content="Redo"
+                    <Button Content="Redo"
                         Margin="5"
                         Width="50" Height="25"
                         Command="{Binding RedoCommand}"/>
-            </StackPanel>
-            <Button Grid.Row="7" Grid.Column="1"
+                </StackPanel>
+                <Button Grid.Row="7" Grid.Column="1"
                     Content="Complete"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Command="{Binding CompleteCommand}"/>
-            <Button Grid.Row="9" Grid.Column="1"
+                <Button Grid.Row="9" Grid.Column="1"
                     Content="Cancel"
                     Margin="5"
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Command="{Binding CancelCommand}"/>
-            <Button x:Name="ClearButton" 
+                <Button x:Name="ClearButton" 
                     Grid.Row="10" Grid.Column="1"
                     Content="Clear"
                     Margin="5"
@@ -150,91 +182,67 @@
                     IsEnabled="False"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="ClearButtonClick"/>
-            
-        </Grid>
-        <StackPanel x:Name="layers_panel" Grid.Column="1" Background="#FFDEDEDE" Visibility="Collapsed">
-            <StackPanel.Resources>
-                <Style x:Key="DataGridUnselectableRowStyle" TargetType="{x:Type DataGridRow}">
-                    <Setter Property="IsSelected" Value="False"/>
-                </Style>
-                <Style x:Key="CellStyle" TargetType="{x:Type DataGridCell}">
-                    <Setter Property="Foreground" Value="Black" />
-                    <Style.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Background" Value="{x:Null}" />
-                            <Setter Property="BorderBrush" Value="{x:Null}" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-                <DataTemplate x:Key="GraphicOverlayTemplate">
-                    <CheckBox Content="{Binding Id}"
+
+            </Grid>
+            <StackPanel x:Name="layers_panel" Grid.Column="1" Grid.RowSpan="3" Background="#FFDEDEDE" Visibility="Collapsed">
+                <StackPanel.Resources>
+                    <Style x:Key="DataGridUnselectableRowStyle" TargetType="{x:Type DataGridRow}">
+                        <Setter Property="IsSelected" Value="False"/>
+                    </Style>
+                    <Style x:Key="CellStyle" TargetType="{x:Type DataGridCell}">
+                        <Setter Property="Foreground" Value="Black" />
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{x:Null}" />
+                                <Setter Property="BorderBrush" Value="{x:Null}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                    <DataTemplate x:Key="GraphicOverlayTemplate" DataType="esri:ArcGISLayer">
+                        <CheckBox Content="{Binding Id}"
                                       IsChecked="{Binding IsVisible}"
                                       Margin="5"/>
-                </DataTemplate>
-                <DataTemplate x:Key="PlusBtnTemplate" >
-                    <Button x:Name="plusbtn" Width="30" Background="Green" Content="+" Foreground="White" FontSize="15"
+                    </DataTemplate>
+                    <DataTemplate x:Key="PlusBtnTemplate" >
+                        <Button x:Name="plusbtn" Width="30" Background="Green" Content="+" Foreground="White" FontSize="15"
                             Click="plusbtn_Click"/>
-                </DataTemplate>
-                <DataTemplate x:Key="MinesBtnTemplate" >
-                    <Button x:Name="minesbtn" Width="30" Background="Red" Content="-" Foreground="White" FontSize="15" 
+                    </DataTemplate>
+                    <DataTemplate x:Key="MinesBtnTemplate" >
+                        <Button x:Name="minesbtn" Width="30" Background="Red" Content="-" Foreground="White" FontSize="15" 
                             Click="minesbtn_Click"/>
-                </DataTemplate>
-            </StackPanel.Resources>
-            <TextBlock Text="Select Graphic Layers for display."
+                    </DataTemplate>
+                </StackPanel.Resources>
+                <TextBlock Text="Select Graphic Layers for display."
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />
-            <DataGrid SelectionChanged="DataGrid_Graphiclayers_SelectionChanged" Width="220" 
+                <DataGrid SelectionChanged="DataGrid_Graphiclayers_SelectionChanged" Width="220" 
                       CellStyle="{StaticResource CellStyle}" AutoGenerateColumns="False" 
                       x:Name="DataGrid_Graphiclayers" HeadersVisibility="None">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn CellTemplate="{StaticResource GraphicOverlayTemplate}"/>
-                    <DataGridTemplateColumn CellTemplate="{StaticResource PlusBtnTemplate}"/>
-                    <DataGridTemplateColumn CellTemplate="{StaticResource MinesBtnTemplate}"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            
-            <TextBlock Text="Select Layers for display."
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn CellTemplate="{StaticResource GraphicOverlayTemplate}"/>
+                        <DataGridTemplateColumn CellTemplate="{StaticResource PlusBtnTemplate}"/>
+                        <DataGridTemplateColumn CellTemplate="{StaticResource MinesBtnTemplate}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Text="Select Layers for display."
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />
-            <ListView x:Name="LayersListView">
-                <ListView.ItemTemplate>
-                    <DataTemplate DataType="esri:ArcGISLayer">
-                        <CheckBox Content="{Binding Name}"
+                <ListView x:Name="LayersListView">
+                    <ListView.ItemTemplate>
+                        <DataTemplate DataType="esri:ArcGISLayer">
+                            <CheckBox Content="{Binding Name}"
                                       IsChecked="{Binding IsVisible}"
                                       Margin="5" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackPanel>
-        <StackPanel x:Name="distance_panel" Grid.Column="1" Width="220" Visibility="Visible">
-            <StackPanel.Background>
-                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
-            </StackPanel.Background>
-            <TextBlock Text="Select lat and lng to show distance."
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-            <Button x:Name="start_distance_btn" Content="Start Distance" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="start_distance_btn_Click">
-                <Button.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                        <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
-                    </LinearGradientBrush>
-                </Button.Background>
-            </Button>
-            <TextBlock x:Name="coordinate_text" Text="Coordinates:"
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-            <ComboBox x:Name="distance_type_combo" Margin="10,5" Text="Please select a type" SelectionChanged="distance_type_combo_SelectionChanged">
-                <ComboBoxItem IsSelected="True" Name="cbi1">Nautical Mile</ComboBoxItem>
-                <ComboBoxItem Name="cbi2">Kilometre</ComboBoxItem>
-                <ComboBoxItem Name="cbi3">Mile</ComboBoxItem>
-            </ComboBox>
-            <TextBlock x:Name="distance_text" Text="Distance:"
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-            <TextBlock x:Name="angle_text" Text="Radial/Bearing:"
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-        </StackPanel>
-    </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+            <TextBlock Grid.Row="3" Grid.Column="4" Name="lblCursorPosition">
+                <TextBlock.Background>
+                    <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
+                </TextBlock.Background>
+            </TextBlock>
+        </Grid>
+    </DockPanel>
 </UserControl>

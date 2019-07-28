@@ -69,65 +69,19 @@ namespace ArcMap.View
         #region Initialize
         private async void Initialize()
         {
-            // Create new Map
-
-            // Create the uri for the tiled layer
-            Uri tiledLayerUri = new Uri(
-            //"https://sampleserver6.arcgisonline.com/arcgis/rest/services/WorldTimeZones/MapServer");
-            "http://localhost:6060/geoserver/wms");
-
-            // Create a tiled layer using url
-            ArcGISTiledLayer tiledLayer = new ArcGISTiledLayer(tiledLayerUri)
-            {
-                Name = "Tiled Layer"
-            };
-
-            //Add the tiled layer to map
-            //myMap.OperationalLayers.Add(tiledLayer);
-
-            Uri serviceUri = new Uri("http://localhost:6060/geoserver/wms");
-            //"https://sampleserver6.arcgisonline.com/arcgis/rest/services/SampleWorldCities/MapServer");
-
-            // Create new image layer from the url
-            ArcGISMapImageLayer imageLayer1 = new ArcGISMapImageLayer(serviceUri)
-            {
-                Name = "World Cities Population",
-                //Opacity = 0.5
-            };
-
-            // Add created layer to the basemaps collection
-            //myMap.OperationalLayers.Add(imageLayer1);
-
-            // Create the uri for the ArcGISMapImage layer
-            Uri imageLayerUri = new Uri(
-                "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer");
-
-            // Create ArcGISMapImage layer using a url
-            ArcGISMapImageLayer imageLayer = new ArcGISMapImageLayer(imageLayerUri)
-            {
-                Name = "Image Layer",
-
-                // Set the visible scale range for the image layer
-                //MinScale = 40000000,
-                //MaxScale = 2000000
-            };
-
-            // Add the image layer to map
-            //myMap.OperationalLayers.Add(imageLayer);
-
             // Create Uri for feature layer
-            Uri featureLayerUri = new Uri(
-                "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/FeatureServer/0");
+            //Uri featureLayerUri = new Uri(
+            //    "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/FeatureServer/0");
 
-            // Create a feature layer using url
-            FeatureLayer myFeatureLayer = new FeatureLayer(featureLayerUri)
-            {
-                Name = "Feature Layer"
-            };
+            //// Create a feature layer using url
+            //FeatureLayer myFeatureLayer = new FeatureLayer(featureLayerUri)
+            //{
+            //    Name = "Feature Layer"
+            //};
             // Apply an imagery basemap to the map
             //myMap.Basemap = Basemap.CreateImagery();
             // Add the feature layer to map
-            myMap.OperationalLayers.Add(myFeatureLayer);
+            //myMap.OperationalLayers.Add(myFeatureLayer);
 
             try
             {
@@ -155,7 +109,7 @@ namespace ArcMap.View
 
             // Provide used Map to the MapView
             MyMapView.Map = myMap;
-            // Set Viewpoint so that it is centered on the London coordinates defined above
+            // Set Viewpoint so that it is centered on the coordinates defined bottom
             await MyMapView.SetViewpointCenterAsync(29.70, 57.22);
 
             // Set the Viewpoint scale to match the specified scale 
@@ -174,10 +128,10 @@ namespace ArcMap.View
             // Respond to user taps.
             MyMapView.GeoViewTapped += MapView_Tapped;
 
-            //Tiff2Text.ExifMetadata(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test.txt");
-            //Tiff2Text.EnumratesTiffTags(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test2.txt");
-            //Tiff2Text.PrintDirectiory(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test3.txt");
-            Tiff2Text.RgbShow(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test4.bmp");
+            //Tiff2Text.ExifMetadata(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test5.txt");
+            //Tiff2Text.EnumratesTiffTags(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test6.txt");
+            //Tiff2Text.PrintDirectiory(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test7.txt");
+            //Tiff2Text.RgbShow(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test4.bmp");
 
         }
         private void InitializeSketch()
@@ -191,7 +145,7 @@ namespace ArcMap.View
                 Id = "layer 1"
             };
             MyMapView.GraphicsOverlays.Add(_sketchOverlay);
-            DataGrid_Graphiclayers.ItemsSource = MyMapView.GraphicsOverlays;
+            DataGrid_Graphiclayers.ItemsSource = _sketchOverlay.Graphics;
 
             // Assign the map to the MapView
             MyMapView.Map = myMap;
@@ -213,6 +167,35 @@ namespace ArcMap.View
             // Set the sketch editor as the page's data context
             DataContext = MyMapView.SketchEditor;
         }
+        #endregion
+
+        #region toolbar buttons
+        private void Ruler_btn_Click(object sender, RoutedEventArgs e)
+        {
+            if (distance_panel.Visibility == Visibility.Collapsed)
+            {
+                sketch_panel.Visibility = Visibility.Collapsed;
+                layers_panel.Visibility = Visibility.Collapsed;
+                distance_panel.Visibility = Visibility.Visible;
+
+                Mouse.OverrideCursor = Cursors.Pen;
+                _distanceOverlay.Graphics.Clear();
+                MyMapView.DismissCallout();
+                start_distance = true;
+                first = last = null;
+            }
+            else
+            {
+                distance_panel.Visibility = Visibility.Collapsed;
+                Mouse.OverrideCursor = null;
+                _distanceOverlay.Graphics.Clear();
+                MyMapView.DismissCallout();
+                start_distance = false;
+                first = last = null;
+            }
+
+        }
+
         #endregion
 
         #region Graphic and symbol helpers
@@ -377,21 +360,13 @@ namespace ArcMap.View
             else
                 layers_panel.Visibility = Visibility.Collapsed;
         }
-
-        private void distance_btn_Click(object sender, RoutedEventArgs e)
-        {
-            if (distance_panel.Visibility == Visibility.Collapsed)
-            {
-                sketch_panel.Visibility = Visibility.Collapsed;
-                layers_panel.Visibility = Visibility.Collapsed;
-                distance_panel.Visibility = Visibility.Visible;
-            }
-            else
-                distance_panel.Visibility = Visibility.Collapsed;
-        }
         #endregion
 
         #region edit layers btns
+        private int FindGreatGraphicId()
+        {
+            return 0;
+        }
         private void plusbtn_Click(object sender, RoutedEventArgs e)
         {
             GraphicsOverlay g = ((Button)sender).DataContext as GraphicsOverlay;
@@ -430,18 +405,10 @@ namespace ArcMap.View
         #endregion
 
         #region Ruler parts
-        private void start_distance_btn_Click(object sender, RoutedEventArgs e)
-        {
-            _distanceOverlay.Graphics.Clear();
-            MyMapView.DismissCallout();
-            start_distance = true;
-            first = last = null;
-        }
         private void MapView_Tapped(object sender, GeoViewInputEventArgs e)
         {
             // Get the tapped point - this is in the map's spatial reference,
             // which in this case is WebMercator because that is the SR used by the included basemaps.
-            //MapPoint tappedPoint = e.Location;
             MapPoint tappedPoint = MyMapView.ScreenToLocation(e.Position);
             // Update the graphics.
             if (start_distance == true)
@@ -466,35 +433,56 @@ namespace ArcMap.View
 
                 if (projectedPoint == first)
                 {
-                    CalloutDefinition calloutDef = new CalloutDefinition("Coordinate:",
-                        string.Format("{0} : {1}", "Start", projectedCoords));
-                    MyMapView.ShowCalloutAt(tappedPoint, calloutDef);
+                    //CalloutDefinition calloutDef = new CalloutDefinition("Coordinate:",
+                    //    string.Format("{0}", projectedCoords));
+                    //MyMapView.ShowCalloutAt(tappedPoint, calloutDef);
                 }
                 else
                 {
                     Show_results(projectedPoint);
                     start_distance = false;
+                    Mouse.OverrideCursor = null;
                 }
 
             }
         }
+        private void MyMapView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (first != null && last == null)
+            {
+                _distanceOverlay.Graphics.Clear();
+                MyMapView.DismissCallout();
+                first = last = null;
+            }
+        }
         private void MyMapView_MouseMove(object sender, MouseEventArgs e)
         {
-            if (start_distance && first != null)
+            try
             {
                 MapPoint Point = MyMapView.ScreenToLocation(e.GetPosition(MyMapView));
                 MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(Point, SpatialReferences.Wgs84);
-                _distanceOverlay.Graphics.Clear();
-                Show_results(projectedPoint);
+                string projectedCoords = string.Format("lat: {1:F4}, lng: {0:F4}", projectedPoint.X, projectedPoint.Y);
+                if (start_distance && first != null)
+                {
+                    _distanceOverlay.Graphics.Clear();
+                    Show_results(projectedPoint);
+                }
+                lblCursorPosition.Text = projectedCoords;
+            }
+            catch (Exception)
+            {
+                //
             }
         }
         private void Show_results(MapPoint projectedPoint)
         {
             // Format the results in strings.
-            string projectedCoords = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
+            string first_projectedCoord = string.Format("{0:F4}, {1:F4}", first.X, first.Y);
+            string last_projectedCoord = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
 
             // show the results in the text blocks
-            coordinate_text.Text = string.Format("{0} : {1}", "End", projectedCoords);
+            coordinate_text.Text = string.Format("{0} : {1} && {2}", "Coordiantes",
+                first_projectedCoord, last_projectedCoord);
             _distance = distance(first.Y, first.X, projectedPoint.Y, projectedPoint.X, distance_type[0]);
             distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
                 _distance, distance_type);
@@ -508,6 +496,8 @@ namespace ArcMap.View
             Color creationColor = Color.Red;
             // Create and add a graphic from the geometry the user drew
             Graphic graphic = CreateGraphic(pline, creationColor);
+            _distanceOverlay.Graphics.Add(new Graphic(first));
+            _distanceOverlay.Graphics.Add(new Graphic(projectedPoint));
             _distanceOverlay.Graphics.Add(graphic);
         }
         private void distance_type_combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
