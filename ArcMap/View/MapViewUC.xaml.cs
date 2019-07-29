@@ -45,6 +45,8 @@ namespace ArcMap.View
 
         // Create and hold a list of uniquely-identifying WMS layer names to display
         private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads", "test:DEM_of_Iran_30m" };
+
+        private bool zoom_slider_down;
         #endregion
         public MapViewUC()
         {
@@ -578,22 +580,55 @@ namespace ArcMap.View
                 return (dist);
             }
         }
+
         #endregion
 
-        #region ZoomBtns
+        #region Zoom options
+
+        public double GetMyMapViewScale
+        {
+            get => MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale).TargetScale;
+            
+        }
+
+        private async void Zoom_slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            //double value = e.NewValue;
+            //await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
+        }
+
+        private void Zoom_slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            this.zoom_slider_down = false;
+        }
+
+        private void Zoom_slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            Zoom_slider.Value = 0;
+        }
+
+        private async void Zoom_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            double value = Zoom_slider.Value;
+            while(true)
+                await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
+        }
+
+        private async void Zoom_slider_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+           
+        }
 
         private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
         {
-            Viewpoint viewpoint = MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale);
-            await MyMapView.SetViewpointScaleAsync(viewpoint.TargetScale - 100000);
+            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - 100000);
         }
 
         private async void ZoomOut_btn_Click(object sender, RoutedEventArgs e)
         {
-            Viewpoint viewpoint = MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale);
-            await MyMapView.SetViewpointScaleAsync(viewpoint.TargetScale + 100000);
+            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale + 100000);
         }
-
+        
         #endregion
     }
 }

@@ -243,10 +243,11 @@
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </TextBlock.Background>
             </TextBlock>
-            <StackPanel Grid.Row="1" Grid.Column="4" Width="20" Margin="80,50,0,0">
+            <StackPanel Grid.Row="1" Grid.Column="4" Width="25" Margin="80,50,0,0">
                 <Button Margin="0,10" x:Name="ZoomIn_btn" ToolTip="Zoom In" Click="ZoomIn_btn_Click">
                     <Image Source="/Icons/plus_48x48.png"/>
                 </Button>
+                <Slider Thumb.DragDelta="Zoom_slider_DragDelta" Thumb.DragCompleted="Zoom_slider_DragCompleted" Name="Zoom_slider" Orientation="Vertical" HorizontalAlignment="Right" Maximum="100000" Minimum="-100000" Height="120" ValueChanged="Zoom_slider_ValueChanged" MouseLeftButtonUp="Zoom_slider_MouseLeftButtonUp" MouseLeftButtonDown="Zoom_slider_MouseLeftButtonDown" Margin="0,0,3,0"/>
                 <Button Margin="0,10" x:Name="ZoomOut_btn" ToolTip="Zoom Out" Click="ZoomOut_btn_Click">
                     <Image Source="/Icons/minus_48x48.png"/>
                 </Button>
