@@ -18,6 +18,8 @@ using Esri.ArcGISRuntime.UI.GeoAnalysis;
 using System.Windows.Media.Imaging;
 using System.IO;
 using System.Drawing.Imaging;
+using Microsoft.Win32;
+using System.Threading;
 
 namespace ArcMap.View
 {
@@ -47,6 +49,18 @@ namespace ArcMap.View
         private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads", "test:DEM_of_Iran_30m" };
 
         private bool zoom_slider_down;
+        private Point _startPoint;
+        private bool dragAction;
+        private ListBoxItem _originatingListBoxItem;
+
+        public GraphicsOverlayCollection GraphicLayers
+        {
+            get { return MyMapView.GraphicsOverlays; }
+        }
+        public LayerCollection OverLayers
+        {
+            get { return myMap.OperationalLayers; }
+        }
         #endregion
         public MapViewUC()
         {
@@ -61,7 +75,7 @@ namespace ArcMap.View
                 Color.Purple,
                 Color.Black
             };
-            myMap = new Map();
+            myMap = new Map(SpatialReference.FromJson("{\r\n   \"@id\": \"ogrcrs200681\",\r\n   \"srsName\": \"Asia_Lambert_Conformal_Conic\",\r\n   \"srsID\": {\r\n      \"name\": {\r\n         \"@codeSpace\": \"urn:ogc:def:crs:EPSG::\",\r\n         \"#text\": \"102012\"\r\n      }\r\n   },\r\n   \"baseCRS\": {\r\n      \"GeographicCRS\": {\r\n         \"@id\": \"ogrcrs200682\",\r\n         \"srsName\": \"GCS_WGS_1984\",\r\n         \"usesEllipsoidalCS\": {\r\n            \"EllipsoidalCS\": {\r\n               \"@id\": \"ogrcrs200683\",\r\n               \"csName\": \"ellipsoidal\",\r\n               \"csID\": {\r\n                  \"name\": {\r\n                     \"@codeSpace\": \"urn:ogc:def:cs:EPSG::\",\r\n                     \"#text\": \"6402\"\r\n                  }\r\n               },\r\n               \"usesAxis\": [\r\n                  {\r\n                     \"CoordinateSystemAxis\": {\r\n                        \"@id\": \"ogrcrs200684\",\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                        \"name\": \"Geodetic latitude\",\r\n                        \"axisID\": {\r\n                           \"name\": {\r\n                              \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                              \"#text\": \"9901\"\r\n                           }\r\n                        },\r\n                        \"axisAbbrev\": \"Lat\",\r\n                        \"axisDirection\": \"north\"\r\n                     }\r\n                  },\r\n                  {\r\n                     \"CoordinateSystemAxis\": {\r\n                        \"@id\": \"ogrcrs200685\",\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                        \"name\": \"Geodetic longitude\",\r\n                        \"axisID\": {\r\n                           \"name\": {\r\n                              \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                              \"#text\": \"9902\"\r\n                           }\r\n                        },\r\n                        \"axisAbbrev\": \"Lon\",\r\n                        \"axisDirection\": \"east\"\r\n                     }\r\n                  }\r\n               ]\r\n            }\r\n         },\r\n         \"usesGeodeticDatum\": {\r\n            \"GeodeticDatum\": {\r\n               \"@id\": \"ogrcrs200686\",\r\n               \"datumName\": \"WGS_1984\",\r\n               \"usesPrimeMeridian\": {\r\n                  \"PrimeMeridian\": {\r\n                     \"@id\": \"ogrcrs200687\",\r\n                     \"meridianName\": \"Greenwich\",\r\n                     \"greenwichLongitude\": {\r\n                        \"angle\": {\r\n                           \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                           \"#text\": \"0\"\r\n                        }\r\n                     }\r\n                  }\r\n               },\r\n               \"usesEllipsoid\": {\r\n                  \"Ellipsoid\": {\r\n                     \"@id\": \"ogrcrs200688\",\r\n                     \"ellipsoidName\": \"WGS_1984\",\r\n                     \"semiMajorAxis\": {\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                        \"#text\": \"6378137\"\r\n                     },\r\n                     \"secondDefiningParameter\": {\r\n                        \"inverseFlattening\": {\r\n                           \"@uom\": \"urn:ogc:def:uom:EPSG::9201\",\r\n                           \"#text\": \"298.257223563\"\r\n                        }\r\n                     }\r\n                  }\r\n               }\r\n            }\r\n         }\r\n      }\r\n   },\r\n   \"definedByConversion\": {\r\n      \"Conversion\": {\r\n         \"@id\": \"ogrcrs200689\"\r\n      }\r\n   },\r\n   \"usesCartesianCS\": {\r\n      \"CartesianCS\": {\r\n         \"@id\": \"ogrcrs200690\",\r\n         \"csName\": \"Cartesian\",\r\n         \"csID\": {\r\n            \"name\": {\r\n               \"@codeSpace\": \"urn:ogc:def:cs:EPSG::\",\r\n               \"#text\": \"4400\"\r\n            }\r\n         },\r\n         \"usesAxis\": [\r\n            {\r\n               \"CoordinateSystemAxis\": {\r\n                  \"@id\": \"ogrcrs200691\",\r\n                  \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                  \"name\": \"Easting\",\r\n                  \"axisID\": {\r\n                     \"name\": {\r\n                        \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                        \"#text\": \"9906\"\r\n                     }\r\n                  },\r\n                  \"axisAbbrev\": \"E\",\r\n                  \"axisDirection\": \"east\"\r\n               }\r\n            },\r\n            {\r\n               \"CoordinateSystemAxis\": {\r\n                  \"@id\": \"ogrcrs200692\",\r\n                  \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                  \"name\": \"Northing\",\r\n                  \"axisID\": {\r\n                     \"name\": {\r\n                        \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                        \"#text\": \"9907\"\r\n                     }\r\n                  },\r\n                  \"axisAbbrev\": \"N\",\r\n                  \"axisDirection\": \"north\"\r\n               }\r\n            }\r\n         ]\r\n      }\r\n   }\r\n}"));
             InitializeComponent();
             Initialize();
             InitializeDistance();
@@ -101,8 +115,8 @@ namespace ArcMap.View
             myMap.OperationalLayers.Add(_wmsLayer);
 
             // Create a map point the map should zoom to
-            MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.WebMercator);
-
+            MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.Wgs84);
+            
             // Set the initial viewpoint for map
             //myMap.InitialViewpoint = new Viewpoint(57.22, 29.1, 8762.7156655228955);
             //myMap.Basemap = Basemap.CreateNationalGeographic();
@@ -111,6 +125,7 @@ namespace ArcMap.View
 
             // Provide used Map to the MapView
             MyMapView.Map = myMap;
+            myMap.SpatialReference.ToString();
             // Set Viewpoint so that it is centered on the coordinates defined bottom
             await MyMapView.SetViewpointCenterAsync(29.70, 57.22);
 
@@ -121,7 +136,10 @@ namespace ArcMap.View
         private void InitializeDistance()
         {
             // Add a graphics overlay for showing the tapped point.
-            _distanceOverlay = new GraphicsOverlay();
+            _distanceOverlay = new GraphicsOverlay()
+            {
+                Id = "Distance layer"
+            };
             start_distance = false;
             distance_type = "NM";
             SimpleMarkerSymbol markerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle.Circle, Color.Black, 5);
@@ -146,8 +164,9 @@ namespace ArcMap.View
             {
                 Id = "layer 1"
             };
+            //MyMapView.GraphicsOverlays.Clear();
             MyMapView.GraphicsOverlays.Add(_sketchOverlay);
-            DataGrid_Graphiclayers.ItemsSource = _sketchOverlay.Graphics;
+            GraphicLayesrListBox.ItemsSource = MyMapView.GraphicsOverlays;
 
             // Assign the map to the MapView
             MyMapView.Map = myMap;
@@ -158,6 +177,10 @@ namespace ArcMap.View
 
             // Fill the color combo box with choices for the sketch colors
             SketchColorComboBox.ItemsSource = colors;
+            SketchColorComboBox.SelectedIndex = 0;
+
+            // sketch layer
+            SketchLayerComboBox.ItemsSource = GraphicLayers;
             SketchColorComboBox.SelectedIndex = 0;
 
             // Set the sketch editor configuration to allow vertex editing, resizing, and moving
@@ -232,6 +255,15 @@ namespace ArcMap.View
                     }
                 // Symbolize with a marker symbol
                 case GeometryType.Point:
+                    {
+                        symbol = new SimpleMarkerSymbol()
+                        {
+                            Color = color,
+                            Style = SimpleMarkerSymbolStyle.Circle,
+                            Size = 5d
+                        };
+                        break;
+                    }
                 case GeometryType.Multipoint:
                     {
 
@@ -274,6 +306,67 @@ namespace ArcMap.View
         #endregion
 
         #region edit graphic btns
+
+        private void DrawByValueButton_Click(object sender, RoutedEventArgs e)
+        {
+            if ((SketchCreationMode)SketchModeComboBox.SelectedItem == SketchCreationMode.Circle)
+            {
+                Popup popup = new Popup();
+                bool? result = popup.ShowDialog();
+                //if (result == true)
+                {
+                    if (popup.Radius != 0)
+                        DrawCircle(popup);
+                }
+            }
+            else if ((SketchCreationMode)SketchModeComboBox.SelectedItem == SketchCreationMode.Rectangle)
+            {
+                PopupRect popup = new PopupRect();
+                bool? result = popup.ShowDialog();
+                //if (result == true)
+                {
+                    if (popup.mapPoint != "" && popup.mapPoint2 != "")
+                        DrawRectangle(popup);
+                }
+            }
+        }
+
+        private void DrawCircle(Popup popup)
+        {
+            MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
+            //CoordinateFormatter.ToLatitudeLongitude(tappedPoint, LatitudeLongitudeFormat.DecimalDegrees, 0);
+            // Create a planar buffer graphic around the input location at the specified distance.
+            //Geometry bufferGeometryPlanar = GeometryEngine.Buffer(tappedPoint, popup.Radius);
+            //Graphic planarBufferGraphic = new Graphic(bufferGeometryPlanar, outlineSymbol);
+
+            // Create a geodesic buffer graphic using the same location and distance.
+            Geometry bufferGeometryGeodesic = GeometryEngine.BufferGeodetic(tappedPoint, popup.Radius, LinearUnits.Meters, double.NaN, GeodeticCurveType.Geodesic);
+            Graphic geodesicBufferGraphic = CreateGraphic(bufferGeometryGeodesic, colors[SketchColorComboBox.SelectedIndex]);
+            _sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
+            _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
+        }
+        private void DrawRectangle(PopupRect popup)
+        {
+            MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
+            MapPoint tappedPoint2 = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint2, SpatialReferences.Wgs84);
+            //CoordinateFormatter.ToLatitudeLongitude(tappedPoint, LatitudeLongitudeFormat.DecimalDegrees, 0);
+            // Create a planar buffer graphic around the input location at the specified distance.
+            //Geometry bufferGeometryPlanar = GeometryEngine.Buffer(tappedPoint, popup.Radius);
+            //Graphic planarBufferGraphic = new Graphic(bufferGeometryPlanar, outlineSymbol);
+
+            // Create a geodesic buffer graphic using the same location and distance.
+            PointCollection pointCollection = new PointCollection(SpatialReferences.Wgs84);
+            pointCollection.Add(tappedPoint);
+            pointCollection.Add(new MapPoint(tappedPoint.X, tappedPoint2.Y));
+            pointCollection.Add(tappedPoint2);
+            pointCollection.Add(new MapPoint(tappedPoint2.X, tappedPoint.Y));
+            pointCollection.Add(tappedPoint);
+            var polygon = new Polygon(pointCollection);
+            Graphic geodesicBufferGraphic = CreateGraphic(polygon, colors[SketchColorComboBox.SelectedIndex]);
+            //_sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
+            _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
+        }
+
         private async void DrawButtonClick(object sender, RoutedEventArgs e)
         {
             try
@@ -364,6 +457,230 @@ namespace ArcMap.View
         }
         #endregion
 
+        #region Drag and drop support
+
+        private void ListBox_DragPreviewMove(object sender, MouseButtonEventArgs e)
+        {
+            // This method is called when the user clicks and starts dragging a listbox item.
+            _startPoint = e.GetPosition(null);
+
+        }
+
+        private void StartDrag(object sender, MouseEventArgs e)
+        {
+            if (sender is ListBoxItem)
+            {
+                // Get the listbox item that is being moved.
+                ListBoxItem sendingItem = (ListBoxItem)sender;
+
+                // Record that this item was being dragged - used later when drag ends to determine which item to move.
+                _originatingListBoxItem = sendingItem;
+
+                // Register the start of the drag & drop operation with the system.
+                DragDrop.DoDragDrop(sendingItem, sendingItem.DataContext, DragDropEffects.Move);
+
+                // Mark the dragged item as selected.
+                sendingItem.IsSelected = true;
+                dragAction = false;
+            }
+        }
+
+        private void ListBoxItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (sender is ListBoxItem)
+            {
+                if (Mouse.LeftButton == MouseButtonState.Pressed && !dragAction)
+                {
+                    Point position = e.GetPosition(null);
+                    if (Math.Abs(position.X - _startPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+
+                        Math.Abs(position.Y - _startPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+
+                    {
+                        dragAction = true;
+                        this.StartDrag(sender, e);
+                    }
+                }
+            }
+        }
+
+        private void ListBoxItem_OnDrop(object sender, DragEventArgs e)
+        {
+            // This method is called when the user finishes dragging while over the listbox.
+
+            // Find the source and destination list boxes.
+            ListBox sourceBox = FindParentListBox(_originatingListBoxItem);
+            if (sourceBox == null)
+            {
+                // Return if the source isn't valid - happens when duplicate events are raised.
+                return;
+            }
+
+            // Find the list box that the item was dropped on (i.e. dragged to).
+            ListBox destinationBox = FindParentListBox((UIElement)sender);
+
+            // Get the data that is being dropped.
+            GraphicsOverlay draggedData = (GraphicsOverlay)e.Data.GetData(typeof(GraphicsOverlay));
+
+            // Find where in the respective lists the items are.
+            int indexOfRemoved = sourceBox.Items.IndexOf(draggedData);
+            int indexOfInsertion;
+
+            // Sender is the control that the item is being dropped on. Could be a listbox or a listbox item.
+            if (sender is ListBoxItem)
+            {
+                // Find the layer that the item represents.
+                GraphicsOverlay targetData = ((ListBoxItem)sender).DataContext as GraphicsOverlay;
+
+                // Find the position of the layer in the listbox.
+                indexOfInsertion = destinationBox.Items.IndexOf(targetData);
+            }
+            else if (destinationBox != sourceBox)
+            {
+                // Drop the item at the end of the list if the user let go of the item on the empty space in the box rather than the list item.
+                // This works because both the listbox and its individual listbox items participate in drag and drop.
+                indexOfInsertion = destinationBox.Items.Count - 1;
+            }
+            else
+            {
+                return;
+            }
+
+            //// Find the appropriate source and destination boxes.
+            //LayerCollection sourceList = sourceBox == IncludedListBox ? _viewModel.IncludedLayers : _viewModel.ExcludedLayers;
+            //LayerCollection destinationList = destinationBox == IncludedListBox ? _viewModel.IncludedLayers : _viewModel.ExcludedLayers;
+
+            // Return if there is nothing to do.
+            if (indexOfRemoved == indexOfInsertion)
+            {
+                return;
+            }
+
+            indexOfInsertion -= 1;
+
+            // Perform the move.
+            object obj = SketchLayerComboBox.SelectedItem;
+            GraphicLayers.RemoveAt(indexOfRemoved);
+            GraphicLayers.Insert(indexOfInsertion + 1, draggedData);
+            SketchLayerComboBox.SelectedItem = obj;
+
+        }
+
+        private static ListBox FindParentListBox(UIElement source)
+        {
+            // This is needed because it is hard to tell which listbox an item belongs to.
+
+            // Walk up the visual element tree until a ListBox is found.
+            UIElement parentElement = source;
+            // While the parent element is not a listbox and the parent element is not null,
+            while (!(parentElement is ListBox) && parentElement != null)
+            {
+                // find the next parent.
+                parentElement = System.Windows.Media.VisualTreeHelper.GetParent(parentElement) as UIElement;
+            }
+
+            return parentElement as ListBox;
+        }
+    
+        private void SketchLayerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //if(SketchLayerComboBox.SelectedIndex > GraphicLayers.Count -1)
+                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            GraphicsOverlay g = new GraphicsOverlay()
+            {
+                Id = "layer " + (MyMapView.GraphicsOverlays.Count + 1)
+            };
+            GraphicLayers.Add(g);
+        }
+        #endregion Drag and drop support
+
+        #region Save
+
+        private async void Save_btn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Wait for rendering to finish before taking the screenshot.
+                await WaitForRenderCompleteAsync(MyMapView);
+
+                // Export the image from MapView.
+                RuntimeImage image = await MyMapView.ExportImageAsync();
+
+                // Display the image in the UI.
+                var img = await image.GetEncodedBufferAsync();
+
+                SaveFileDialog dlg = new SaveFileDialog();
+                dlg.FileName = "Document"; // Default file name
+                                           // dlg.DefaultExt = ".jpg"; // Default file extension
+                dlg.Filter = "JPeg Image|*.jpg|Bitmap Image|*.bmp|PNG Image|*.png";
+                if (dlg.ShowDialog() == true)
+                {
+                    string fName = dlg.FileName;
+                    if (dlg.FileName != "")
+                    {
+                        var encoder = new PngBitmapEncoder(); // Or PngBitmapEncoder, or whichever encoder you want
+                        encoder.Frames.Add(BitmapFrame.Create(img));
+                        using (var stream = dlg.OpenFile())
+                        {
+                            encoder.Save(stream);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error");
+            }
+        }
+
+        private static Task WaitForRenderCompleteAsync(MapView mapview)
+        {
+            // The task completion source manages the task, including marking it as finished when the time comes.
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+
+            // If the map is currently finished drawing, set the result immediately.
+            if (mapview.DrawStatus == DrawStatus.Completed)
+            {
+                tcs.SetResult(null);
+            }
+            // Otherwise, configure a callback and a timeout to either set the result when
+            // the map is finished drawing or set the result after 2000 ms.
+            else
+            {
+                // Define a cancellation token source for 2000 ms.
+                const int timeoutMs = 2000;
+                var ct = new CancellationTokenSource(timeoutMs);
+
+                // Register the callback that sets the task result after 2000 ms.
+                ct.Token.Register(() =>
+                    tcs.TrySetResult(null), false);
+
+
+                // Define a local function that will set the task result and unregister itself when the map finishes drawing.
+                void DrawCompleteHandler(object s, DrawStatusChangedEventArgs e)
+                {
+                    if (e.Status == DrawStatus.Completed)
+                    {
+                        mapview.DrawStatusChanged -= DrawCompleteHandler;
+                        tcs.TrySetResult(null);
+                    }
+                }
+
+                // Register the draw complete event handler.
+                mapview.DrawStatusChanged += DrawCompleteHandler;
+            }
+
+            // Return the task.
+            return tcs.Task;
+        }
+
+        #endregion Save
+
+
         #region edit layers btns
         private int FindGreatGraphicId()
         {
@@ -400,10 +717,6 @@ namespace ArcMap.View
             MyMapView.GraphicsOverlays.Remove(g);
         }
 
-        private void DataGrid_Graphiclayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            DataGrid_Graphiclayers.UnselectAll();
-        }
         #endregion
 
         #region Ruler parts
@@ -610,13 +923,17 @@ namespace ArcMap.View
         private async void Zoom_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             double value = Zoom_slider.Value;
-            while(true)
-                await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
+            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
         }
 
         private async void Zoom_slider_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
            
+        }
+
+        private void Circle_btn_Click(object sender, RoutedEventArgs e)
+        {
+
         }
 
         private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)

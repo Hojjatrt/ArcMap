@@ -1,4 +1,5 @@
-﻿using Esri.ArcGISRuntime.UI;
+﻿using Esri.ArcGISRuntime;
+using Esri.ArcGISRuntime.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +25,11 @@ namespace ArcMap
         public MainWindow()
         {
             InitializeComponent();
+            string licenseKey = "runtimelite,1000,rud5233433699,none,NKMFA0PL4S4JLMZ59219";
+            ArcGISRuntimeEnvironment.SetLicense(licenseKey);
         }
 
         // Map initialization logic is contained in MapViewModel.cs
+        
     }
 }

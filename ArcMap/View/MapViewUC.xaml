@@ -22,6 +22,12 @@
             <Button x:Name="Ruler_btn" ToolTip="Ruler" Click="Ruler_btn_Click">
                 <Image Source="/Icons/ruler_32x32.png"/>
             </Button>
+            <Button x:Name="Save_btn" ToolTip="Save" Click="Save_btn_Click">
+                <Image Source="/Icons/save_32x32.png"/>
+            </Button>
+            <Button x:Name="Circle_btn" ToolTip="Circle" Click="Circle_btn_Click">
+                <Image Source="/Icons/search_32x32.png"/>
+            </Button>
         </ToolBar>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -32,10 +38,11 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="31*"/>
+                <RowDefinition Height="330*"/>
                 <RowDefinition Height="20"/>
             </Grid.RowDefinitions>
-            <esri:MapView x:Name="MyMapView" Grid.RowSpan="3" Grid.Column="1" Grid.ColumnSpan="3" MouseMove="MyMapView_MouseMove" MouseRightButtonDown="MyMapView_MouseRightButtonDown"/>
+            <esri:MapView x:Name="MyMapView" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="3" MouseMove="MyMapView_MouseMove" MouseRightButtonDown="MyMapView_MouseRightButtonDown"/>
             <StackPanel x:Name="distance_panel" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Visibility="Collapsed" Orientation="Horizontal">
                 <StackPanel.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
@@ -63,7 +70,7 @@
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="50,5" />
             </StackPanel>
-            <StackPanel Grid.Column="0" Grid.RowSpan="3" Width="30">
+            <StackPanel Grid.Column="0" Grid.RowSpan="4" Width="30">
                 <StackPanel.Background>
                     <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </StackPanel.Background>
@@ -94,14 +101,14 @@
                     </Button.RenderTransform>
                 </Button>
             </StackPanel>
-            <Grid x:Name="sketch_panel" Grid.Column="1" Grid.RowSpan="3" Background="#FFDEDEDE" Visibility="Collapsed">
+            <Grid x:Name="sketch_panel" Grid.Column="1" Grid.RowSpan="4" Background="#FFDEDEDE" Visibility="Visible">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="50"/>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="35"/>
-                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="35"/>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="35"/>
                     <RowDefinition Height="20"/>
@@ -114,14 +121,14 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="1" Grid.Column="0" 
-                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
                        Text="Sketch shape:"/>
                 <ComboBox x:Name="SketchModeComboBox"
                       Grid.Row="1" Grid.Column="1"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center"
                       Margin="5"/>
                 <TextBlock Grid.Row="2" Grid.Column="0" 
-                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
                        Text="Sketch Color:"/>
                 <ComboBox x:Name="SketchColorComboBox"
                       Grid.Row="2" Grid.Column="1"
@@ -142,8 +149,16 @@
                     Width="100" Height="25"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="DrawButtonClick"/>
-                <Button x:Name="EditButton" 
+                <Button x:Name="DrawByValueButton" 
                     Grid.Row="4" Grid.Column="1"
+                    Content="Draw By Vlaue"
+                    Margin="5"
+                    Width="100" Height="25"
+                    HorizontalAlignment="Center" VerticalAlignment="Top"
+                    IsEnabled="True"
+                    Click="DrawByValueButton_Click"/>
+                <Button x:Name="EditButton" 
+                    Grid.Row="5" Grid.Column="1"
                     Content="Edit"
                     Margin="5"
                     Width="100" Height="25"
@@ -182,50 +197,56 @@
                     IsEnabled="False"
                     HorizontalAlignment="Center" VerticalAlignment="Top"
                     Click="ClearButtonClick"/>
-
+                <TextBlock Grid.Row="11" Grid.Column="0" 
+                       HorizontalAlignment="Center" 
+                       Text="Selected Layer:"
+                           Margin="5"/>
+                <ComboBox x:Name="SketchLayerComboBox"
+                      Grid.Row="12" Grid.Column="1"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                          Margin="5" SelectionChanged="SketchLayerComboBox_SelectionChanged">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Id}" Margin="5" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </Grid>
-            <StackPanel x:Name="layers_panel" Grid.Column="1" Grid.RowSpan="3" Background="#FFDEDEDE" Visibility="Collapsed">
+            <StackPanel x:Name="layers_panel" Grid.Column="1" Grid.RowSpan="4" Background="#FFDEDEDE" Visibility="Collapsed">
                 <StackPanel.Resources>
-                    <Style x:Key="DataGridUnselectableRowStyle" TargetType="{x:Type DataGridRow}">
-                        <Setter Property="IsSelected" Value="False"/>
-                    </Style>
-                    <Style x:Key="CellStyle" TargetType="{x:Type DataGridCell}">
-                        <Setter Property="Foreground" Value="Black" />
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{x:Null}" />
-                                <Setter Property="BorderBrush" Value="{x:Null}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                    <DataTemplate x:Key="GraphicOverlayTemplate" DataType="esri:ArcGISLayer">
+                    <DataTemplate x:Key="LayerListTemplate" DataType="esri:GraphicsOverlay">
                         <CheckBox Content="{Binding Id}"
                                       IsChecked="{Binding IsVisible}"
                                       Margin="5"/>
                     </DataTemplate>
-                    <DataTemplate x:Key="PlusBtnTemplate" >
-                        <Button x:Name="plusbtn" Width="30" Background="Green" Content="+" Foreground="White" FontSize="15"
-                            Click="plusbtn_Click"/>
-                    </DataTemplate>
-                    <DataTemplate x:Key="MinesBtnTemplate" >
-                        <Button x:Name="minesbtn" Width="30" Background="Red" Content="-" Foreground="White" FontSize="15" 
-                            Click="minesbtn_Click"/>
-                    </DataTemplate>
+                    <Style TargetType="ListBoxItem" x:Key="LayerListBoxItemStyle">
+                        <!-- PreviewMouseLeftButtonDown is the event that is raised when the user clicks and holds the click. -->
+                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListBox_DragPreviewMove" />
+                        <EventSetter Event="PreviewMouseMove" Handler="ListBoxItem_PreviewMouseMove"/>
+                        <!-- Drop is raised when user lets go while doing a drag-and-drop operation. -->
+                        <EventSetter Event="Drop" Handler="ListBoxItem_OnDrop" />
+                        <!-- AllowDrop specifies that dragged items can be dropped on this item. -->
+                        <!-- ListBox items need to be supported for dragging to enable re-ordering. -->
+                        <Setter Property="AllowDrop" Value="True" />
+                    </Style>
                 </StackPanel.Resources>
-                <TextBlock Text="Select Graphic Layers for display."
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-                <DataGrid SelectionChanged="DataGrid_Graphiclayers_SelectionChanged" Width="220" 
-                      CellStyle="{StaticResource CellStyle}" AutoGenerateColumns="False" 
-                      x:Name="DataGrid_Graphiclayers" HeadersVisibility="None">
-                    <DataGrid.Columns>
-                        <DataGridTemplateColumn CellTemplate="{StaticResource GraphicOverlayTemplate}"/>
-                        <DataGridTemplateColumn CellTemplate="{StaticResource PlusBtnTemplate}"/>
-                        <DataGridTemplateColumn CellTemplate="{StaticResource MinesBtnTemplate}"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Label Content="Drag and drop to reorder layers." />
+                <Label Content="Graphic Layers in map"
+                       HorizontalContentAlignment="Center"
+                       FontWeight="SemiBold" />
+                <Button Margin="5" Content="+ New layer +" Width="120" BorderBrush="#FF532929" Background="#FF2ECD1E" Foreground="White" FontWeight="Bold" Click="Button_Click"></Button>
+                <!-- Item template defined in UserControl.Resources above specifies that each listbox 
+                     item's content consists of a label with the layer's Name property displayed. -->
+                <!-- The item container style is used to define events and properties on listbox items. -->
+                <ListBox x:Name="GraphicLayesrListBox"
+                         ItemsSource="{Binding GraphicLayers}"
+                         ItemTemplate="{StaticResource LayerListTemplate}"
+                         ItemContainerStyle="{StaticResource LayerListBoxItemStyle}"
+                         AllowDrop="True"
+                         MinHeight="100"
+                         Drop="ListBoxItem_OnDrop" />
 
-                <TextBlock Text="Select Layers for display."
+                <TextBlock Text="Select Layers to display."
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="0,10" />
                 <ListView x:Name="LayersListView">
@@ -238,12 +259,12 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </StackPanel>
-            <TextBlock Grid.Row="3" Grid.Column="4" Name="lblCursorPosition">
+            <TextBlock Grid.Row="3" Grid.Column="3" Name="lblCursorPosition">
                 <TextBlock.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </TextBlock.Background>
             </TextBlock>
-            <StackPanel Grid.Row="1" Grid.Column="4" Width="25" Margin="80,50,0,0">
+            <StackPanel Grid.Row="1" Grid.Column="3" Width="25" Margin="102,50,22,0" Grid.RowSpan="2">
                 <Button Margin="0,10" x:Name="ZoomIn_btn" ToolTip="Zoom In" Click="ZoomIn_btn_Click">
                     <Image Source="/Icons/plus_48x48.png"/>
                 </Button>
