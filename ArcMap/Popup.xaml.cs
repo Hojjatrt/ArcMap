@@ -38,7 +38,7 @@ namespace ArcMap
         {
             get { return radius; }
         }
-        
+
 
         private void DrawCirclebtn_Click(object sender, RoutedEventArgs e)
         {
@@ -62,8 +62,18 @@ namespace ArcMap
                     mappoint = DmsLTextField.Text + "N" + " " + DmsRTextField.Text + "E";
                 }
             }
-            radius = Convert.ToDouble(RadiusTextField.Text);
-            if (check) 
+
+            if (check)
+            {
+                if (RadiusTextField.Text.Trim() != "")
+                    radius = Convert.ToDouble(RadiusTextField.Text);
+                else
+                {
+                    MessageBox.Show("Radius field cannot be empty!", "error", MessageBoxButton.OK);
+                    check = false;
+                }
+            }
+            if (check)
                 this.Close();
         }
     }

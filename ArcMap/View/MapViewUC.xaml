@@ -25,9 +25,15 @@
             <Button x:Name="Save_btn" ToolTip="Save" Click="Save_btn_Click">
                 <Image Source="/Icons/save_32x32.png"/>
             </Button>
-            <Button x:Name="Circle_btn" ToolTip="Circle" Click="Circle_btn_Click">
-                <Image Source="/Icons/search_32x32.png"/>
+            <Button x:Name="Goto_btn" ToolTip="Goto" Click="Goto_btn_Click">
+                <Image Source="/Icons/route_32x32.png"/>
             </Button>
+            <Border BorderThickness="1" BorderBrush="#FF0EA7FF" Margin="5,0">
+                <TextBox x:Name="Routex_TextField" Width="50"></TextBox>
+            </Border>
+            <Border BorderThickness="1" BorderBrush="#FF0EA7FF" Margin="0">
+                <TextBox x:Name="Routey_TextField" Width="50"></TextBox>
+            </Border>
         </ToolBar>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -264,11 +270,16 @@
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </TextBlock.Background>
             </TextBlock>
+            <TextBlock Grid.Row="3" Grid.Column="2" Name="lblLineWidth">
+                <TextBlock.Background>
+                    <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
+                </TextBlock.Background>
+            </TextBlock>
             <StackPanel Grid.Row="1" Grid.Column="3" Width="25" Margin="102,50,22,0" Grid.RowSpan="2">
                 <Button Margin="0,10" x:Name="ZoomIn_btn" ToolTip="Zoom In" Click="ZoomIn_btn_Click">
                     <Image Source="/Icons/plus_48x48.png"/>
                 </Button>
-                <Slider Thumb.DragDelta="Zoom_slider_DragDelta" Thumb.DragCompleted="Zoom_slider_DragCompleted" Name="Zoom_slider" Orientation="Vertical" HorizontalAlignment="Right" Maximum="100000" Minimum="-100000" Height="120" ValueChanged="Zoom_slider_ValueChanged" MouseLeftButtonUp="Zoom_slider_MouseLeftButtonUp" MouseLeftButtonDown="Zoom_slider_MouseLeftButtonDown" Margin="0,0,3,0"/>
+                <Slider Thumb.DragDelta="Zoom_slider_DragDelta" Thumb.DragCompleted="Zoom_slider_DragCompleted" Name="Zoom_slider" Orientation="Vertical" HorizontalAlignment="Right" Maximum="100000" Minimum="-100000" Height="120" ValueChanged="Zoom_slider_ValueChanged" MouseLeftButtonUp="Zoom_slider_MouseLeftButtonUp" MouseLeftButtonDown="Zoom_slider_MouseLeftButtonDown" Margin="0,0,3,0" IsEnabled="False"/>
                 <Button Margin="0,10" x:Name="ZoomOut_btn" ToolTip="Zoom Out" Click="ZoomOut_btn_Click">
                     <Image Source="/Icons/minus_48x48.png"/>
                 </Button>

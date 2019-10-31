@@ -376,6 +376,8 @@ namespace ArcMap.View
                 Color creationColor = colors[SketchColorComboBox.SelectedIndex];
                 Geometry geometry = await MyMapView.SketchEditor.StartAsync(creationMode, true);
 
+                lblLineWidth.Text = "Length : " + GeometryEngine.LengthGeodetic(geometry,LinearUnits.Kilometers).ToString() + " KM";
+                
                 // Create and add a graphic from the geometry the user drew
                 Graphic graphic = CreateGraphic(geometry, creationColor);
                 _sketchOverlay.Graphics.Add(graphic);
@@ -896,6 +898,25 @@ namespace ArcMap.View
 
         #endregion
 
+        #region Goto
+        private async void Goto_btn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                MapPoint mapPoint = new MapPoint(Convert.ToDouble(Routey_TextField.Text), Convert.ToDouble(Routex_TextField.Text));
+                await MyMapView.SetViewpointCenterAsync(mapPoint);
+
+                // Set the Viewpoint scale to match the specified scale 
+                await MyMapView.SetViewpointScaleAsync(876200);
+
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Lat & Lng Field cannot be empty!", "Error", MessageBoxButton.OK);
+            }
+        }
+        #endregion GOTO
+
         #region Zoom options
 
         public double GetMyMapViewScale
@@ -931,10 +952,6 @@ namespace ArcMap.View
            
         }
 
-        private void Circle_btn_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
         {
