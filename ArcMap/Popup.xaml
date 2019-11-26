@@ -46,7 +46,7 @@
                     <TextBox x:Name="DDlngTextField" Width="100"
                          Tag="Decimal Degrees" Margin="5" />
                 </StackPanel>
-                <RadioButton x:Name="DmsRadiobtn" Content="Degrees, Minutes, Seconds "
+                <RadioButton x:Name="DmsRadiobtn" Content="Degrees Minutes Seconds "
                            Grid.Row="2" Grid.Column="0"
                            HorizontalAlignment="Right" VerticalContentAlignment="Center" />
                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Width="Auto">
@@ -56,7 +56,7 @@
                     <TextBox x:Name="DmsRTextField" Width="100"
                          Tag="Degrees, Minutes, Seconds" Margin="5" />
                 </StackPanel>
-                <TextBlock Text="Radius: "
+                <TextBlock Text="Radius(miles): "
                            Grid.Row="4" Grid.Column="0"
                            HorizontalAlignment="Right" />
                 <TextBox x:Name="RadiusTextField"

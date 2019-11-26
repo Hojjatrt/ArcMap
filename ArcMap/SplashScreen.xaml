@@ -1,0 +1,22 @@
+﻿<Window x:Class="ArcMap.SplashScreen"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ArcMap"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        mc:Ignorable="d"
+        ShowInTaskbar="False" 
+        ResizeMode="NoResize" 
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" 
+        Background="Transparent" 
+        AllowsTransparency="True"
+        SizeToContent="Width" 
+        Topmost="True" 
+        Title="SplashScreen" Height="369.079" Width="765.79">
+    <Grid>
+        <Image gif:ImageBehavior.RepeatBehavior="2x"
+       gif:ImageBehavior.AnimatedSource="Icons/loader.gif"/>
+    </Grid>
+</Window>

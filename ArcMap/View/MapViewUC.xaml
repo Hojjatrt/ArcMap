@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013" 
+             xmlns:viewModel="clr-namespace:ArcMap.ViewModel"
+             xmlns:local="clr-namespace:ArcMap.View"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="800">
     <UserControl.Resources>
@@ -24,6 +26,9 @@
             </Button>
             <Button x:Name="Save_btn" ToolTip="Save" Click="Save_btn_Click">
                 <Image Source="/Icons/save_32x32.png"/>
+            </Button>
+            <Button x:Name="Screen_btn" ToolTip="ScreenShot" Click="Screen_btn_Click">
+                <Image Source="/Icons/screen_50x50.png"/>
             </Button>
             <Button x:Name="Goto_btn" ToolTip="Goto" Click="Goto_btn_Click">
                 <Image Source="/Icons/route_32x32.png"/>
@@ -218,33 +223,35 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
-            <StackPanel x:Name="layers_panel" Grid.Column="1" Grid.RowSpan="4" Background="#FFDEDEDE" Visibility="Collapsed">
-                <StackPanel.Resources>
-                    <DataTemplate x:Key="LayerListTemplate" DataType="esri:GraphicsOverlay">
-                        <CheckBox Content="{Binding Id}"
+            <ScrollViewer x:Name="layers_panel" Visibility="Collapsed" Grid.Column="1" Grid.RowSpan="4" VerticalScrollBarVisibility="Auto">
+
+                <StackPanel Background="#FFDEDEDE">
+                    <StackPanel.Resources>
+                        <DataTemplate x:Key="LayerListTemplate" DataType="esri:GraphicsOverlay">
+                            <CheckBox Content="{Binding Id}"
                                       IsChecked="{Binding IsVisible}"
                                       Margin="5"/>
-                    </DataTemplate>
-                    <Style TargetType="ListBoxItem" x:Key="LayerListBoxItemStyle">
-                        <!-- PreviewMouseLeftButtonDown is the event that is raised when the user clicks and holds the click. -->
-                        <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListBox_DragPreviewMove" />
-                        <EventSetter Event="PreviewMouseMove" Handler="ListBoxItem_PreviewMouseMove"/>
-                        <!-- Drop is raised when user lets go while doing a drag-and-drop operation. -->
-                        <EventSetter Event="Drop" Handler="ListBoxItem_OnDrop" />
-                        <!-- AllowDrop specifies that dragged items can be dropped on this item. -->
-                        <!-- ListBox items need to be supported for dragging to enable re-ordering. -->
-                        <Setter Property="AllowDrop" Value="True" />
-                    </Style>
-                </StackPanel.Resources>
-                <Label Content="Drag and drop to reorder layers." />
-                <Label Content="Graphic Layers in map"
+                        </DataTemplate>
+                        <Style TargetType="ListBoxItem" x:Key="LayerListBoxItemStyle">
+                            <!-- PreviewMouseLeftButtonDown is the event that is raised when the user clicks and holds the click. -->
+                            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListBox_DragPreviewMove" />
+                            <EventSetter Event="PreviewMouseMove" Handler="ListBoxItem_PreviewMouseMove"/>
+                            <!-- Drop is raised when user lets go while doing a drag-and-drop operation. -->
+                            <EventSetter Event="Drop" Handler="ListBoxItem_OnDrop" />
+                            <!-- AllowDrop specifies that dragged items can be dropped on this item. -->
+                            <!-- ListBox items need to be supported for dragging to enable re-ordering. -->
+                            <Setter Property="AllowDrop" Value="True" />
+                        </Style>
+                    </StackPanel.Resources>
+                    <Label Content="Drag and drop to reorder layers." />
+                    <Label Content="Graphic Layers in map"
                        HorizontalContentAlignment="Center"
                        FontWeight="SemiBold" />
-                <Button Margin="5" Content="+ New layer +" Width="120" BorderBrush="#FF532929" Background="#FF2ECD1E" Foreground="White" FontWeight="Bold" Click="Button_Click"></Button>
-                <!-- Item template defined in UserControl.Resources above specifies that each listbox 
+                    <Button Margin="5" Content="+ New layer +" Width="120" BorderBrush="#FF532929" Background="#FF2ECD1E" Foreground="White" FontWeight="Bold" Click="Button_Click"></Button>
+                    <!-- Item template defined in UserControl.Resources above specifies that each listbox 
                      item's content consists of a label with the layer's Name property displayed. -->
-                <!-- The item container style is used to define events and properties on listbox items. -->
-                <ListBox x:Name="GraphicLayesrListBox"
+                    <!-- The item container style is used to define events and properties on listbox items. -->
+                    <ListBox x:Name="GraphicLayesrListBox"
                          ItemsSource="{Binding GraphicLayers}"
                          ItemTemplate="{StaticResource LayerListTemplate}"
                          ItemContainerStyle="{StaticResource LayerListBoxItemStyle}"
@@ -252,19 +259,27 @@
                          MinHeight="100"
                          Drop="ListBoxItem_OnDrop" />
 
-                <TextBlock Text="Select Layers to display."
-                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
-                           Margin="0,10" />
-                <ListView x:Name="LayersListView">
-                    <ListView.ItemTemplate>
-                        <DataTemplate DataType="esri:ArcGISLayer">
-                            <CheckBox Content="{Binding Name}"
-                                      IsChecked="{Binding IsVisible}"
-                                      Margin="5" />
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </StackPanel>
+                    <TextBlock Text="Select layers to display."
+                           Grid.Row="0" Margin="5"
+                           Foreground="Black" FontWeight="Bold" TextAlignment="Center" />
+
+                    <TreeView Name="LayerTreeView">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type viewModel:LayerDisplayVM}"
+                                                  ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay}" 
+                                          VerticalAlignment="Center" Margin="5"
+                                          Checked="ToggleButton_OnChecked"
+                                          Unchecked="ToggleButton_OnChecked" />
+                                    <TextBlock Text="{Binding}" />
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+
+                </StackPanel>
+            </ScrollViewer>
             <TextBlock Grid.Row="3" Grid.Column="3" Name="lblCursorPosition">
                 <TextBlock.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>

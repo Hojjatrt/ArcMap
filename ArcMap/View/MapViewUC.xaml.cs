@@ -20,6 +20,12 @@ using System.IO;
 using System.Drawing.Imaging;
 using Microsoft.Win32;
 using System.Threading;
+using Esri.ArcGISRuntime.Ogc;
+using System.Collections.ObjectModel;
+using ArcMap.ViewModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Reflection;
 
 namespace ArcMap.View
 {
@@ -41,9 +47,11 @@ namespace ArcMap.View
         private double _distance, _angle;
         private string distance_type;
 
-        private WmsLayer _wmsLayer;
+        //private WmsLayer _wmsLayer;
         // Create and hold the URL to the WMS service showing EPA water info
-        private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/wms?");//"https://watersgeo.epa.gov/arcgis/services/OWPROGRAM/SDWIS_WMERC/MapServer/WMSServer?request=GetCapabilities&service=WMS");
+        private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/test/wms?");
+        // Hold a list of LayerDisplayVM; this is the ViewModel
+        public ObservableCollection<LayerDisplayVM> _viewModelList = new ObservableCollection<LayerDisplayVM>();
 
         // Create and hold a list of uniquely-identifying WMS layer names to display
         private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads", "test:DEM_of_Iran_30m" };
@@ -71,67 +79,108 @@ namespace ArcMap.View
                 Color.Yellow,
                 Color.Green,
                 Color.Blue,
-                Color.Indigo,
+                Color.SkyBlue,
                 Color.Purple,
+                Color.Cyan,
+                Color.Gray,
+                Color.Khaki,
                 Color.Black
             };
-            myMap = new Map(SpatialReference.FromJson("{\r\n   \"@id\": \"ogrcrs200681\",\r\n   \"srsName\": \"Asia_Lambert_Conformal_Conic\",\r\n   \"srsID\": {\r\n      \"name\": {\r\n         \"@codeSpace\": \"urn:ogc:def:crs:EPSG::\",\r\n         \"#text\": \"102012\"\r\n      }\r\n   },\r\n   \"baseCRS\": {\r\n      \"GeographicCRS\": {\r\n         \"@id\": \"ogrcrs200682\",\r\n         \"srsName\": \"GCS_WGS_1984\",\r\n         \"usesEllipsoidalCS\": {\r\n            \"EllipsoidalCS\": {\r\n               \"@id\": \"ogrcrs200683\",\r\n               \"csName\": \"ellipsoidal\",\r\n               \"csID\": {\r\n                  \"name\": {\r\n                     \"@codeSpace\": \"urn:ogc:def:cs:EPSG::\",\r\n                     \"#text\": \"6402\"\r\n                  }\r\n               },\r\n               \"usesAxis\": [\r\n                  {\r\n                     \"CoordinateSystemAxis\": {\r\n                        \"@id\": \"ogrcrs200684\",\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                        \"name\": \"Geodetic latitude\",\r\n                        \"axisID\": {\r\n                           \"name\": {\r\n                              \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                              \"#text\": \"9901\"\r\n                           }\r\n                        },\r\n                        \"axisAbbrev\": \"Lat\",\r\n                        \"axisDirection\": \"north\"\r\n                     }\r\n                  },\r\n                  {\r\n                     \"CoordinateSystemAxis\": {\r\n                        \"@id\": \"ogrcrs200685\",\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                        \"name\": \"Geodetic longitude\",\r\n                        \"axisID\": {\r\n                           \"name\": {\r\n                              \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                              \"#text\": \"9902\"\r\n                           }\r\n                        },\r\n                        \"axisAbbrev\": \"Lon\",\r\n                        \"axisDirection\": \"east\"\r\n                     }\r\n                  }\r\n               ]\r\n            }\r\n         },\r\n         \"usesGeodeticDatum\": {\r\n            \"GeodeticDatum\": {\r\n               \"@id\": \"ogrcrs200686\",\r\n               \"datumName\": \"WGS_1984\",\r\n               \"usesPrimeMeridian\": {\r\n                  \"PrimeMeridian\": {\r\n                     \"@id\": \"ogrcrs200687\",\r\n                     \"meridianName\": \"Greenwich\",\r\n                     \"greenwichLongitude\": {\r\n                        \"angle\": {\r\n                           \"@uom\": \"urn:ogc:def:uom:EPSG::9102\",\r\n                           \"#text\": \"0\"\r\n                        }\r\n                     }\r\n                  }\r\n               },\r\n               \"usesEllipsoid\": {\r\n                  \"Ellipsoid\": {\r\n                     \"@id\": \"ogrcrs200688\",\r\n                     \"ellipsoidName\": \"WGS_1984\",\r\n                     \"semiMajorAxis\": {\r\n                        \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                        \"#text\": \"6378137\"\r\n                     },\r\n                     \"secondDefiningParameter\": {\r\n                        \"inverseFlattening\": {\r\n                           \"@uom\": \"urn:ogc:def:uom:EPSG::9201\",\r\n                           \"#text\": \"298.257223563\"\r\n                        }\r\n                     }\r\n                  }\r\n               }\r\n            }\r\n         }\r\n      }\r\n   },\r\n   \"definedByConversion\": {\r\n      \"Conversion\": {\r\n         \"@id\": \"ogrcrs200689\"\r\n      }\r\n   },\r\n   \"usesCartesianCS\": {\r\n      \"CartesianCS\": {\r\n         \"@id\": \"ogrcrs200690\",\r\n         \"csName\": \"Cartesian\",\r\n         \"csID\": {\r\n            \"name\": {\r\n               \"@codeSpace\": \"urn:ogc:def:cs:EPSG::\",\r\n               \"#text\": \"4400\"\r\n            }\r\n         },\r\n         \"usesAxis\": [\r\n            {\r\n               \"CoordinateSystemAxis\": {\r\n                  \"@id\": \"ogrcrs200691\",\r\n                  \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                  \"name\": \"Easting\",\r\n                  \"axisID\": {\r\n                     \"name\": {\r\n                        \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                        \"#text\": \"9906\"\r\n                     }\r\n                  },\r\n                  \"axisAbbrev\": \"E\",\r\n                  \"axisDirection\": \"east\"\r\n               }\r\n            },\r\n            {\r\n               \"CoordinateSystemAxis\": {\r\n                  \"@id\": \"ogrcrs200692\",\r\n                  \"@uom\": \"urn:ogc:def:uom:EPSG::9001\",\r\n                  \"name\": \"Northing\",\r\n                  \"axisID\": {\r\n                     \"name\": {\r\n                        \"@codeSpace\": \"urn:ogc:def:axis:EPSG::\",\r\n                        \"#text\": \"9907\"\r\n                     }\r\n                  },\r\n                  \"axisAbbrev\": \"N\",\r\n                  \"axisDirection\": \"north\"\r\n               }\r\n            }\r\n         ]\r\n      }\r\n   }\r\n}"));
+            myMap = new Map();
             InitializeComponent();
             Initialize();
             InitializeDistance();
             InitializeSketch();
+            LoadInitialData();
         }
 
         #region Initialize
         private async void Initialize()
         {
-            // Create Uri for feature layer
-            //Uri featureLayerUri = new Uri(
-            //    "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Recreation/FeatureServer/0");
-
-            //// Create a feature layer using url
-            //FeatureLayer myFeatureLayer = new FeatureLayer(featureLayerUri)
-            //{
-            //    Name = "Feature Layer"
-            //};
-            // Apply an imagery basemap to the map
-            //myMap.Basemap = Basemap.CreateImagery();
-            // Add the feature layer to map
-            //myMap.OperationalLayers.Add(myFeatureLayer);
-
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "wmsdatafile.txt";
             try
             {
-                // Create a new WMS layer displaying the specified layers from the service
-                _wmsLayer = new WmsLayer(_wmsUrl, _wmsLayerNames);
-                // Load the layer
-                await _wmsLayer.LoadAsync();
+                using (StreamReader sr = new StreamReader(resourceName))
+                {
+                    string result = sr.ReadToEnd();
+                    _wmsUrl = new Uri(result);
+                }
             }
             catch (Exception)
             {
-
-                MessageBox.Show("Layer names not set!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("error in reading database file!");
             }
-            // Add the layer to the map
-            myMap.OperationalLayers.Add(_wmsLayer);
 
-            // Create a map point the map should zoom to
-            MapPoint mapPoint = new MapPoint(-11000000, 4500000, SpatialReferences.Wgs84);
-            
-            // Set the initial viewpoint for map
-            //myMap.InitialViewpoint = new Viewpoint(57.22, 29.1, 8762.7156655228955);
-            //myMap.Basemap = Basemap.CreateNationalGeographic();
-            // Event for layer view state changed
-            //MyMapView.LayerViewStateChanged += OnLayerViewStateChanged;
+            // Create a new WMS layer displaying the specified layers from the service
+            // Create the WMS Service.
+            WmsService service = new WmsService(_wmsUrl);
+
+            try
+            {
+                // Load the WMS Service.
+                await service.LoadAsync();
+
+                // Get the service info (metadata) from the service.
+                WmsServiceInfo info = service.ServiceInfo;
+                // Get the list of layer infos.
+                foreach (var layerInfo in info.LayerInfos)
+                {
+                    LayerDisplayVM.BuildLayerInfoList(new LayerDisplayVM(layerInfo, null), _viewModelList);
+                }
+
+                // Update the map display based on the viewModel.
+                _viewModelList.RemoveAt(0);
+
+                var layernamesfile = "selectedlayers.txt";
+                var layernames = "";
+                try
+                {
+                    using (StreamReader sr = new StreamReader(layernamesfile))
+                    {
+                        layernames = sr.ReadToEnd();
+                    }
+                }
+                catch (Exception)
+                {
+                    
+                }
+                string[] lines = layernames.Split('\n');
+                // Return if no layers are selected.
+                if (lines.Length != 0)
+                {
+                    foreach (var layername in lines)
+                    {
+                        var layer = _viewModelList.Where(vm => vm.Info.Name == layername.Trim('\r') && !vm.IsEnabled).Select(vm => vm).ToList();
+                        if(layer.Any())
+                        {
+                            foreach (var item in layer)
+                            {
+                                item.IsEnabled = true;
+                            }
+                        }
+                    }
+                }
+
+                UpdateMapDisplay(_viewModelList);
+
+                // Update the list of layers.
+                LayerTreeView.ItemsSource = _viewModelList.Take(1);
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString(), "Error");
+            }
 
             // Provide used Map to the MapView
             MyMapView.Map = myMap;
-            myMap.SpatialReference.ToString();
             // Set Viewpoint so that it is centered on the coordinates defined bottom
             await MyMapView.SetViewpointCenterAsync(29.70, 57.22);
 
             // Set the Viewpoint scale to match the specified scale 
             await MyMapView.SetViewpointScaleAsync(876000);
-            LayersListView.ItemsSource = myMap.OperationalLayers;
+            //LayersListView.ItemsSource = myMap.OperationalLayers;
         }
         private void InitializeDistance()
         {
@@ -147,12 +196,6 @@ namespace ArcMap.View
             MyMapView.GraphicsOverlays.Add(_distanceOverlay);
             // Respond to user taps.
             MyMapView.GeoViewTapped += MapView_Tapped;
-
-            //Tiff2Text.ExifMetadata(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test5.txt");
-            //Tiff2Text.EnumratesTiffTags(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test6.txt");
-            //Tiff2Text.PrintDirectiory(@"C:\Users\Lancer\Downloads\DEM 01\DEM_of_Iran_30m.tif", @"D:\Geo\DEM\test7.txt");
-            //Tiff2Text.RgbShow(@"D:\Geo\DEM\test1.tif", @"D:\Geo\DEM\test4.bmp");
-
         }
         private void InitializeSketch()
         {
@@ -193,6 +236,106 @@ namespace ArcMap.View
             DataContext = MyMapView.SketchEditor;
         }
         #endregion
+
+        #region Load data
+        private void LoadInitialData()
+        {
+            try
+            {   // Open the text file using a stream reader.
+                using (StreamReader sr = new StreamReader("datafile.txt"))
+                {
+                    // Read the stream to a string, and write the string to the console.
+                    MyMapView.GraphicsOverlays.Clear();
+                    String all = sr.ReadToEnd();
+                    if (all != "")
+                    {
+                        string[] lines = all.Split('\n');
+                        int graphiclayers = Convert.ToInt32(lines[0]);
+                        int index = 1;
+                        for (int i = 1; i <= graphiclayers; i++)
+                        {
+                            string name = lines[index].Trim('\r');
+                            GraphicsOverlay overlay = new GraphicsOverlay()
+                            {
+                                Id = name
+                            };
+                            if (overlay.Id == "Distance layer")
+                                _distanceOverlay = overlay;
+                            MyMapView.GraphicsOverlays.Add(overlay);
+                            int graphics = Convert.ToInt32(lines[index + 1]);
+                            for (int j = 0; j < graphics; j++)
+                            {
+                                Geometry geometry = Geometry.FromJson(lines[index + 2]);
+                                Symbol symbol = Symbol.FromJson(lines[index + 3]);
+                                overlay.Graphics.Add(new Graphic(geometry, symbol));
+                                index += 2;
+                            }
+                            index += 2;
+                            _sketchOverlay = overlay;
+                        }
+                        SimpleMarkerSymbol markerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbolStyle.Circle, Color.Black, 5);
+                        _distanceOverlay.Renderer = new SimpleRenderer(markerSymbol);
+                        SketchLayerComboBox.ItemsSource = GraphicLayers;
+                        SketchColorComboBox.SelectedIndex = GraphicLayers.Count - 1;
+                    }
+                }
+            }
+            catch (FileNotFoundException ex)
+            {
+                MessageBox.Show("Data file is missing!");
+                InitializeDistance();
+                InitializeSketch();
+            }
+            catch (IOException e)
+            {
+                MessageBox.Show("Init data is missing!");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Data could not be read.");
+            }
+        }
+        #endregion Load data
+
+        #region Wms Service config
+        /// <summary>
+        /// Updates the map with the latest layer selection
+        /// </summary>
+        private void UpdateMapDisplay(ObservableCollection<LayerDisplayVM> displayList)
+        {
+            // Remove all existing layers.
+            MyMapView.Map.OperationalLayers.Clear();
+
+            // Get a list of selected LayerInfos.
+            List<WmsLayerInfo> selectedLayers = displayList.Where(vm => vm.IsEnabled).Select(vm => vm.Info).ToList();
+
+            // Return if no layers are selected.
+            if (!selectedLayers.Any())
+            {
+                return;
+            }
+
+            // Write the string array to a new file named "selectedlayers.txt".
+            using (StreamWriter outputFile = new StreamWriter("selectedlayers.txt"))
+            {
+                foreach (var item in selectedLayers)
+                    outputFile.WriteLine(item.Name);
+            }
+
+            // Create a new WmsLayer from the selected layers.
+            WmsLayer myLayer = new WmsLayer(selectedLayers);
+            
+            // Add the layer to the map.
+            MyMapView.Map.OperationalLayers.Add(myLayer);
+        }
+
+
+        private void ToggleButton_OnChecked(object sender, RoutedEventArgs e)
+        {
+            // Update the map. Note: updating selection is handled by the IsEnabled property on LayerDisplayVM.
+            UpdateMapDisplay(_viewModelList);
+        }
+        #endregion Wms Service config
 
         #region toolbar buttons
         private void Ruler_btn_Click(object sender, RoutedEventArgs e)
@@ -306,7 +449,6 @@ namespace ArcMap.View
         #endregion
 
         #region edit graphic btns
-
         private void DrawByValueButton_Click(object sender, RoutedEventArgs e)
         {
             if ((SketchCreationMode)SketchModeComboBox.SelectedItem == SketchCreationMode.Circle)
@@ -334,13 +476,8 @@ namespace ArcMap.View
         private void DrawCircle(Popup popup)
         {
             MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
-            //CoordinateFormatter.ToLatitudeLongitude(tappedPoint, LatitudeLongitudeFormat.DecimalDegrees, 0);
-            // Create a planar buffer graphic around the input location at the specified distance.
-            //Geometry bufferGeometryPlanar = GeometryEngine.Buffer(tappedPoint, popup.Radius);
-            //Graphic planarBufferGraphic = new Graphic(bufferGeometryPlanar, outlineSymbol);
-
             // Create a geodesic buffer graphic using the same location and distance.
-            Geometry bufferGeometryGeodesic = GeometryEngine.BufferGeodetic(tappedPoint, popup.Radius, LinearUnits.Meters, double.NaN, GeodeticCurveType.Geodesic);
+            Geometry bufferGeometryGeodesic = GeometryEngine.BufferGeodetic(tappedPoint, popup.Radius, LinearUnits.Miles, double.NaN, GeodeticCurveType.Geodesic);
             Graphic geodesicBufferGraphic = CreateGraphic(bufferGeometryGeodesic, colors[SketchColorComboBox.SelectedIndex]);
             _sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
             _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
@@ -349,11 +486,6 @@ namespace ArcMap.View
         {
             MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
             MapPoint tappedPoint2 = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint2, SpatialReferences.Wgs84);
-            //CoordinateFormatter.ToLatitudeLongitude(tappedPoint, LatitudeLongitudeFormat.DecimalDegrees, 0);
-            // Create a planar buffer graphic around the input location at the specified distance.
-            //Geometry bufferGeometryPlanar = GeometryEngine.Buffer(tappedPoint, popup.Radius);
-            //Graphic planarBufferGraphic = new Graphic(bufferGeometryPlanar, outlineSymbol);
-
             // Create a geodesic buffer graphic using the same location and distance.
             PointCollection pointCollection = new PointCollection(SpatialReferences.Wgs84);
             pointCollection.Add(tappedPoint);
@@ -362,6 +494,8 @@ namespace ArcMap.View
             pointCollection.Add(new MapPoint(tappedPoint2.X, tappedPoint.Y));
             pointCollection.Add(tappedPoint);
             var polygon = new Polygon(pointCollection);
+            polygon.ToString();
+
             Graphic geodesicBufferGraphic = CreateGraphic(polygon, colors[SketchColorComboBox.SelectedIndex]);
             //_sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
             _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
@@ -376,8 +510,9 @@ namespace ArcMap.View
                 Color creationColor = colors[SketchColorComboBox.SelectedIndex];
                 Geometry geometry = await MyMapView.SketchEditor.StartAsync(creationMode, true);
 
-                lblLineWidth.Text = "Length : " + GeometryEngine.LengthGeodetic(geometry,LinearUnits.Kilometers).ToString() + " KM";
-                
+                // show length of the geometry with nm and km
+                lblLineWidth.Text = String.Format("Length : {0:F4} NM ({1:F4} KM)", GeometryEngine.LengthGeodetic(geometry, LinearUnits.NauticalMiles), GeometryEngine.LengthGeodetic(geometry, LinearUnits.Kilometers));
+
                 // Create and add a graphic from the geometry the user drew
                 Graphic graphic = CreateGraphic(geometry, creationColor);
                 _sketchOverlay.Graphics.Add(graphic);
@@ -395,16 +530,21 @@ namespace ArcMap.View
                 // Report exceptions
                 MessageBox.Show("Error drawing graphic shape: " + ex.Message);
             }
+
         }
 
         private void ClearButtonClick(object sender, RoutedEventArgs e)
         {
             // Remove all graphics from the graphics overlay
-            _sketchOverlay.Graphics.Clear();
+            MessageBoxResult result = MessageBox.Show("Are you sure?\nthe layer and all graphics will remove.", "question", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                _sketchOverlay.Graphics.Clear();
 
-            // Disable buttons that require graphics
-            ClearButton.IsEnabled = false;
-            EditButton.IsEnabled = false;
+                // Disable buttons that require graphics
+                ClearButton.IsEnabled = false;
+                EditButton.IsEnabled = false;
+            }
         }
 
         private async void EditButtonClick(object sender, RoutedEventArgs e)
@@ -583,18 +723,28 @@ namespace ArcMap.View
 
             return parentElement as ListBox;
         }
-    
+
         private void SketchLayerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             //if(SketchLayerComboBox.SelectedIndex > GraphicLayers.Count -1)
-                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+            _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+            if (_sketchOverlay.Graphics.Count > 0)
+            {
+                ClearButton.IsEnabled = true;
+                EditButton.IsEnabled = true;
+            }
+            else
+            {
+                ClearButton.IsEnabled = false;
+                EditButton.IsEnabled = false;
+            }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             GraphicsOverlay g = new GraphicsOverlay()
             {
-                Id = "layer " + (MyMapView.GraphicsOverlays.Count + 1)
+                Id = "layer " + (MyMapView.GraphicsOverlays.Count)
             };
             GraphicLayers.Add(g);
         }
@@ -602,7 +752,45 @@ namespace ArcMap.View
 
         #region Save
 
-        private async void Save_btn_Click(object sender, RoutedEventArgs e)
+        public void Save_btn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //Geometry.FromJson();
+                // Create a string array with the lines of text
+                List<string> graphicsOverlays = new List<string>();
+                graphicsOverlays.Add(MyMapView.GraphicsOverlays.Count.ToString());
+                foreach (var item in MyMapView.GraphicsOverlays)
+                {
+                    graphicsOverlays.Add(item.Id);
+                    graphicsOverlays.Add(item.Graphics.Count.ToString());
+                    foreach (var graphic in item.Graphics)
+                    {
+                        graphicsOverlays.Add(graphic.Geometry.ToJson());
+                        graphicsOverlays.Add(graphic.Symbol.ToJson());
+                    }
+                }
+
+                // Set a variable to the Documents path.
+                //string docPath =
+                //  Environment.GetFolderPath(Environment.SpecialFolder.LocalizedResources);
+
+                // Write the string array to a new file named "datafile.txt".
+                using (StreamWriter outputFile = new StreamWriter("datafile.txt"))
+                {
+                    foreach (string line in graphicsOverlays)
+                        outputFile.WriteLine(line);
+                }
+
+                MessageBox.Show("All data Saved.", "Save", MessageBoxButton.OK);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error");
+            }
+        }
+
+        private async void Screen_btn_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -632,6 +820,14 @@ namespace ArcMap.View
                         }
                     }
                 }
+                //var _kmlDocument = new KmlDocument() { Name = "KML Sample Document" };
+
+                //// Create a KML dataset using the KML document.
+                //var _kmlDataset = new KmlDataset(_kmlDocument);
+
+                //// Create the KML layer using the KML dataset.
+                //var _kmlLayer = new KmlLayer(_kmlDataset);
+                //await MyMapView.Map.SaveAsync();
             }
             catch (Exception ex)
             {
@@ -681,7 +877,6 @@ namespace ArcMap.View
         }
 
         #endregion Save
-
 
         #region edit layers btns
         private int FindGreatGraphicId()
@@ -952,7 +1147,6 @@ namespace ArcMap.View
            
         }
 
-
         private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
         {
             await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - 100000);
@@ -965,4 +1159,5 @@ namespace ArcMap.View
         
         #endregion
     }
+
 }

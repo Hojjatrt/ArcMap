@@ -29,7 +29,14 @@ namespace ArcMap
             ArcGISRuntimeEnvironment.SetLicense(licenseKey);
         }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Do you want to save data?", "Save", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+                new View.MapViewUC().Save_btn_Click(new object(), new RoutedEventArgs());
+        }
+
         // Map initialization logic is contained in MapViewModel.cs
-        
+
     }
 }
