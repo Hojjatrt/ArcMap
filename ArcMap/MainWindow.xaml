@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:ArcMap"
         xmlns:view="clr-namespace:ArcMap.View"
         mc:Ignorable="d"
-        Title="Elevation Map" Height="525" Width="790" Closing="Window_Closing" WindowState="Maximized" WindowStartupLocation="CenterScreen">
+        Title="RCCMap" Height="525" Width="790" WindowState="Maximized" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
     <Window.Resources>
         <local:MapViewModel x:Key="MapViewModel" />
     </Window.Resources>

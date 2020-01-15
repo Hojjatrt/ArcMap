@@ -17,41 +17,37 @@ using System.Windows.Shapes;
 namespace ArcMap
 {
     /// <summary>
-    /// Interaction logic for PopupRect.xaml
+    /// Interaction logic for PopupPoint.xaml
     /// </summary>
-    public partial class PopupRect : Window
+    public partial class PopupPoint : Window
     {
-        public PopupRect(MapView mapView)
+        public PopupPoint(MapView mapView)
         {
             InitializeComponent();
             this.mapView = mapView;
         }
-        private MapPoint mappoint;
-        private MapPoint mappoint2;
-        private MapView mapView;
 
-        public MapPoint mapPoint
+        private MapView mapView;
+        private MapPoint mapPoint;
+
+        public MapPoint MapPoint
         {
-            get { return mappoint; }
+            get { return mapPoint; }
         }
 
-        public MapPoint mapPoint2 { get => mappoint2; }
-
-        private async void DrawRectanglebtn_Click(object sender, RoutedEventArgs e)
+        private async void DrawPointbtn_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-
-                if (RectLatLngTextField.Text.Trim() == "" || RectLatLng2TextField.Text.Trim() == "")
-                    MessageBox.Show("fields cannot be empty!", "error", MessageBoxButton.OK);
+                if (LatLngTextField.Text.Trim() == "")
+                    MessageBox.Show("Lat & long field cannot be empty!", "error", MessageBoxButton.OK);
                 else
                 {
-                    mappoint =
-                        CoordinateFormatter.FromLatitudeLongitude(RectLatLngTextField.Text, mapView.SpatialReference);
-                    mappoint2 =
-                        CoordinateFormatter.FromLatitudeLongitude(RectLatLng2TextField.Text, mapView.SpatialReference);
+                    mapPoint =
+                        CoordinateFormatter.FromLatitudeLongitude(LatLngTextField.Text, mapView.SpatialReference);
 
                     await mapView.SetViewpointCenterAsync(mapPoint);
+
                     // Set the Viewpoint scale to match the specified scale 
                     await mapView.SetViewpointScaleAsync(876200);
                     //mapView.GraphicsOverlays["Temp"].Graphics.Add(new Esri.ArcGISRuntime.UI.Graphic(mapPoint));

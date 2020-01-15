@@ -1,0 +1,50 @@
+﻿<Window x:Class="ArcMap.PopupPoint"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ArcMap"
+        mc:Ignorable="d"
+        Title="Draw Point By Value" Height="236.128" Width="587.594" Topmost="True" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,5,5,0" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="0,5,0,0" />
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Border BorderThickness="2" BorderBrush="Black" Margin="10" Background="GhostWhite" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="2*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Text="Enter the latitude and longitude"
+                    Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                    TextWrapping="Wrap" FontSize="16" FontWeight="Bold" />
+                <Label Content="Latitude and Longitude : " Grid.Row="1" Grid.Column="0"
+                           HorizontalAlignment="Right" VerticalContentAlignment="Center"/>
+                <TextBox Grid.Row="1" Grid.Column="2" x:Name="LatLngTextField" Margin="10,0,0,0" MaxWidth="250" MaxHeight="25" HorizontalAlignment="Left" Width="240" Height="25" />
+                <Label Content="Decimal Degrees: 00.0000N 000.0000E" Grid.Row="1" Grid.Column="2" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="5,40,-5,6" Grid.RowSpan="2"/>
+                <Label Content="Degrees Minutes Seconds: 00 00 00.0N 000 00 00.0E" Grid.Row="1" Grid.Column="2" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="5,59,-5,7" Grid.RowSpan="3"/>
+                <Button x:Name="DrawPointbtn" Content="Draw" Grid.RowSpan="2"
+                        Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                        Margin="0,5,0,0" Height="30"
+                        Click="DrawPointbtn_Click" FontWeight="Bold" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

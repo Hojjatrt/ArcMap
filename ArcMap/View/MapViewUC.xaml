@@ -7,22 +7,23 @@
              xmlns:viewModel="clr-namespace:ArcMap.ViewModel"
              xmlns:local="clr-namespace:ArcMap.View"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="800">
+             d:DesignHeight="800" d:DesignWidth="1200" KeyDown="MyMapView_KeyDown">
     <UserControl.Resources>
         <Style x:Key="myHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="Visibility" Value="Collapsed" />
         </Style>
     </UserControl.Resources>
     <DockPanel Background="Gray">
-        <ToolBar DockPanel.Dock="Top" Height="28">
+        <ToolBar DockPanel.Dock="Top" Height="35">
             <Border BorderThickness="1" BorderBrush="#FF0EA7FF">
-                <TextBox Width="218"></TextBox>
+                <TextBox Width="218" IsEnabled="False"></TextBox>
             </Border>
-            <Button ToolTip="Search">
-                <Image Source="/Icons/search_32x32.png"/>
+            <Separator Width="40" Background="Transparent"></Separator>
+            <Button x:Name="ZoomIn_btn" ToolTip="Zoom In" Click="ZoomIn_btn_Click">
+                <Image Source="/Icons/zoom-in_32x32.png"/>
             </Button>
-            <Button x:Name="Ruler_btn" ToolTip="Ruler" Click="Ruler_btn_Click">
-                <Image Source="/Icons/ruler_32x32.png"/>
+            <Button x:Name="ZoomOut_btn" ToolTip="Zoom Out" Click="ZoomOut_btn_Click">
+                <Image Source="/Icons/zoom-out_32x32.png"/>
             </Button>
             <Button x:Name="Save_btn" ToolTip="Save" Click="Save_btn_Click">
                 <Image Source="/Icons/save_32x32.png"/>
@@ -30,42 +31,91 @@
             <Button x:Name="Screen_btn" ToolTip="ScreenShot" Click="Screen_btn_Click">
                 <Image Source="/Icons/screen_50x50.png"/>
             </Button>
+            <Separator Width="40" Background="Transparent"></Separator>
+            <ComboBox x:Name="SketchColorComboBox" Width="45"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle Fill="{Binding Name}" Width="20" Height="20" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button ToolTip="Point" Tag="Point" Click="DrawShapes_btn_Click">
+                <Image Source="/Icons/pin_32x32.png"/>
+            </Button>
+            <Button x:Name="Polyline_btn" ToolTip="Pilyline" Tag="Polyline" Click="Polyline_btn_Click">
+                <Image Source="/Icons/line_32x32.png"/>
+            </Button>
+            <Button ToolTip="Polygon" Tag="Polygon" Click="DrawShapes_btn_Click">
+                <Image Source="/Icons/polygon_32x32.png"/>
+            </Button>
+            <Button ToolTip="Circle" Tag="Circle" Click="DrawShapes_btn_Click">
+                <Image Source="/Icons/circle_32x32.png"/>
+            </Button>
+            <Button ToolTip="Rectangle" Tag="Rectangle" Click="DrawShapes_btn_Click">
+                <Image Source="/Icons/rectangle_32x32.png"/>
+            </Button>
+            <Button ToolTip="Draw By Value" Tag="ByValue" Click="DrawByValueButton_Click">
+                <Image Source="/Icons/digit_32x32.png"/>
+            </Button>
+            <Button x:Name="CompleteDraw_btn" ToolTip="Complete" Click="CompleteDraw_btn_Click" Command="{Binding CompleteCommand}">
+                <Image Source="/Icons/checked_32x32.png"/>
+            </Button>
+            <ComboBox x:Name="SketchLayerComboBox"
+                      Grid.Row="12" Grid.Column="1" Width="80" VerticalAlignment="Stretch"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="SketchLayerComboBox_SelectionChanged">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <Label Content="{Binding Id}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button x:Name="RenameLayer_btn" ToolTip="Rename Layer" Click="RenameLayer_btn_Click">
+                <Image Source="/Icons/abc_32x32.png"/>
+            </Button>
+            <Button x:Name="ClearLayer_btn" ToolTip="Clean Layer" Click="ClearButtonClick">
+                <Image Source="/Icons/cleaner_32x32.png"/>
+            </Button>
+            <Button x:Name="DeleteLayer_btn" ToolTip="Delete Layer" Click="DeleteLayer_btn_Click">
+                <Image Source="/Icons/delete_32x32.png"/>
+            </Button>
+            <Separator Width="60" Background="Transparent"></Separator>
+            <Button x:Name="Ruler_btn" ToolTip="Ruler" Click="Ruler_btn_Click">
+                <Image Source="/Icons/ruler_32x32.png"/>
+            </Button>
             <Button x:Name="Goto_btn" ToolTip="Goto" Click="Goto_btn_Click">
                 <Image Source="/Icons/route_32x32.png"/>
             </Button>
-            <Border BorderThickness="1" BorderBrush="#FF0EA7FF" Margin="5,0">
-                <TextBox x:Name="Routex_TextField" Width="50"></TextBox>
-            </Border>
-            <Border BorderThickness="1" BorderBrush="#FF0EA7FF" Margin="0">
-                <TextBox x:Name="Routey_TextField" Width="50"></TextBox>
-            </Border>
+            <Separator Width="60" Background="Transparent"></Separator>
+            <Button x:Name="Identify_btn" ToolTip="Identify" Click="Identify_btn_Click">
+                <Image Source="/Icons/info_32x32.png"/>
+            </Button>
+            <Button x:Name="PanMouse_btn" ToolTip="Pan - Cancel" Click="PanMouse_btn_Click">
+                <Image Source="/Icons/hand_32x32.png"/>
+            </Button>
+            <Button x:Name="ArrowMouse_btn" ToolTip="Cursor - Edit" Click="ArrowMouse_btn_Click">
+                <Image Source="/Icons/cursor_32x32.png"/>
+            </Button>
         </ToolBar>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="30"/>
-                <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="20*"/>
+                <ColumnDefinition Width="63*"/>
+                <ColumnDefinition Width="13*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="30"/>
-                <RowDefinition Height="31*"/>
-                <RowDefinition Height="330*"/>
-                <RowDefinition Height="20"/>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="46*"/>
+                <RowDefinition Height="2*"/>
             </Grid.RowDefinitions>
-            <esri:MapView x:Name="MyMapView" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="3" MouseMove="MyMapView_MouseMove" MouseRightButtonDown="MyMapView_MouseRightButtonDown"/>
+            <esri:MapView x:Name="MyMapView" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="3" MouseMove="MyMapView_MouseMove" MouseRightButtonDown="MyMapView_MouseRightButtonDown" GeoViewTapped="MyMapView_GeoViewTapped" KeyDown="MyMapView_KeyDown"/>
             <StackPanel x:Name="distance_panel" Grid.Column="1" Grid.ColumnSpan="3" Grid.Row="0" Visibility="Collapsed" Orientation="Horizontal">
                 <StackPanel.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </StackPanel.Background>
-                <!--<Button x:Name="start_distance_btn" Content="Start Distance" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,5" Click="start_distance_btn_Click">
-                    <Button.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                            <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
-                        </LinearGradientBrush>
-                    </Button.Background>
-                </Button>-->
                 <TextBlock x:Name="coordinate_text" Text="Coordinates:"
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="50,5,50,5" />
@@ -81,150 +131,7 @@
                            TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold"
                            Margin="50,5" />
             </StackPanel>
-            <StackPanel Grid.Column="0" Grid.RowSpan="4" Width="30">
-                <StackPanel.Background>
-                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
-                </StackPanel.Background>
-                <Button x:Name="draw_sketch_btn" Content="Draw Sketch" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="draw_sketch_btn_Click">
-                    <Button.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                            <GradientStop Color="#FFE3E3E3" Offset="0.1"/>
-                        </LinearGradientBrush>
-                    </Button.Background>
-                    <Button.RenderTransform>
-                        <TransformGroup>
-                            <RotateTransform Angle="90"/>
-                        </TransformGroup>
-                    </Button.RenderTransform>
-                </Button>
-                <Button x:Name="layers_btn" Content="Layers" RenderTransformOrigin="0.5,0.5" Width="100" Height="30" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-25,25" Click="layers_btn_Click">
-                    <Button.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
-                            <GradientStop Color="#FF0EA7FF" Offset="0"/>
-                            <GradientStop Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}" Offset="0.099"/>
-                        </LinearGradientBrush>
-                    </Button.Background>
-                    <Button.RenderTransform>
-                        <TransformGroup>
-                            <RotateTransform Angle="90"/>
-                        </TransformGroup>
-                    </Button.RenderTransform>
-                </Button>
-            </StackPanel>
-            <Grid x:Name="sketch_panel" Grid.Column="1" Grid.RowSpan="4" Background="#FFDEDEDE" Visibility="Visible">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition Height="35"/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="1" Grid.Column="0" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="Sketch shape:"/>
-                <ComboBox x:Name="SketchModeComboBox"
-                      Grid.Row="1" Grid.Column="1"
-                      HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                      Margin="5"/>
-                <TextBlock Grid.Row="2" Grid.Column="0" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       Text="Sketch Color:"/>
-                <ComboBox x:Name="SketchColorComboBox"
-                      Grid.Row="2" Grid.Column="1"
-                      HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                      Margin="5">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Rectangle Fill="{Binding Name}" Width="16" Height="16" Margin="0,2,5,2" />
-                                <TextBlock Text="{Binding Name}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button Grid.Row="3" Grid.Column="1"
-                    Content="Draw"
-                    Margin="5"
-                    Width="100" Height="25"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    Click="DrawButtonClick"/>
-                <Button x:Name="DrawByValueButton" 
-                    Grid.Row="4" Grid.Column="1"
-                    Content="Draw By Vlaue"
-                    Margin="5"
-                    Width="100" Height="25"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    IsEnabled="True"
-                    Click="DrawByValueButton_Click"/>
-                <Button x:Name="EditButton" 
-                    Grid.Row="5" Grid.Column="1"
-                    Content="Edit"
-                    Margin="5"
-                    Width="100" Height="25"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    IsEnabled="False"
-                    Click="EditButtonClick"/>
-                <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center" VerticalAlignment="Top"
-                        Grid.Row="6" Grid.Column="1">
-                    <Button Content="Undo"
-                        Margin="5"
-                        Width="50" Height="25"
-                        Command="{Binding UndoCommand}"/>
-                    <Button Content="Redo"
-                        Margin="5"
-                        Width="50" Height="25"
-                        Command="{Binding RedoCommand}"/>
-                </StackPanel>
-                <Button Grid.Row="7" Grid.Column="1"
-                    Content="Complete"
-                    Margin="5"
-                    Width="100" Height="25"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    Command="{Binding CompleteCommand}"/>
-                <Button Grid.Row="9" Grid.Column="1"
-                    Content="Cancel"
-                    Margin="5"
-                    Width="100" Height="25"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    Command="{Binding CancelCommand}"/>
-                <Button x:Name="ClearButton" 
-                    Grid.Row="10" Grid.Column="1"
-                    Content="Clear"
-                    Margin="5"
-                    Width="100" Height="25"
-                    IsEnabled="False"
-                    HorizontalAlignment="Center" VerticalAlignment="Top"
-                    Click="ClearButtonClick"/>
-                <TextBlock Grid.Row="11" Grid.Column="0" 
-                       HorizontalAlignment="Center" 
-                       Text="Selected Layer:"
-                           Margin="5"/>
-                <ComboBox x:Name="SketchLayerComboBox"
-                      Grid.Row="12" Grid.Column="1"
-                      HorizontalAlignment="Stretch" VerticalAlignment="Top"
-                          Margin="5" SelectionChanged="SketchLayerComboBox_SelectionChanged">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <Label Content="{Binding Id}" Margin="5" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Grid>
-            <ScrollViewer x:Name="layers_panel" Visibility="Collapsed" Grid.Column="1" Grid.RowSpan="4" VerticalScrollBarVisibility="Auto">
-
+            <ScrollViewer x:Name="layers_panel" Visibility="Visible" Grid.Column="0" Grid.RowSpan="4" VerticalScrollBarVisibility="Auto">
                 <StackPanel Background="#FFDEDEDE">
                     <StackPanel.Resources>
                         <DataTemplate x:Key="LayerListTemplate" DataType="esri:GraphicsOverlay">
@@ -243,11 +150,18 @@
                             <Setter Property="AllowDrop" Value="True" />
                         </Style>
                     </StackPanel.Resources>
-                    <Label Content="Drag and drop to reorder layers." />
-                    <Label Content="Graphic Layers in map"
-                       HorizontalContentAlignment="Center"
-                       FontWeight="SemiBold" />
-                    <Button Margin="5" Content="+ New layer +" Width="120" BorderBrush="#FF532929" Background="#FF2ECD1E" Foreground="White" FontWeight="Bold" Click="Button_Click"></Button>
+                    <Label Content="Drag and drop to reorder layers."
+                           HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Graphic Layers in map - Add layer"
+                       HorizontalContentAlignment="Center" VerticalAlignment="Center"
+                       FontWeight="SemiBold" Margin="5" />
+                        <Button x:Name="AddNewGraphicLayer_btn" Height="35" Width="35"
+                                MaxWidth="50" MaxHeight="50" Margin="5"
+                            ToolTip="Add New Layer" Click="AddNewGraphicLayer_btn_Click">
+                            <Image Source="/Icons/add_32x32.png"/>
+                        </Button>
+                    </StackPanel>
                     <!-- Item template defined in UserControl.Resources above specifies that each listbox 
                      item's content consists of a label with the layer's Name property displayed. -->
                     <!-- The item container style is used to define events and properties on listbox items. -->
@@ -255,7 +169,7 @@
                          ItemsSource="{Binding GraphicLayers}"
                          ItemTemplate="{StaticResource LayerListTemplate}"
                          ItemContainerStyle="{StaticResource LayerListBoxItemStyle}"
-                         AllowDrop="True"
+                         AllowDrop="True" Margin="10 5"
                          MinHeight="100"
                          Drop="ListBoxItem_OnDrop" />
 
@@ -263,9 +177,9 @@
                            Grid.Row="0" Margin="5"
                            Foreground="Black" FontWeight="Bold" TextAlignment="Center" />
 
-                    <TreeView Name="LayerTreeView">
+                    <TreeView Name="LayerTreeView" Margin="10 5">
                         <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type viewModel:LayerDisplayVM}"
+                            <HierarchicalDataTemplate DataType="{x:Type local:MapViewUC}"
                                                   ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal">
                                     <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay}" 
@@ -280,25 +194,17 @@
 
                 </StackPanel>
             </ScrollViewer>
-            <TextBlock Grid.Row="3" Grid.Column="3" Name="lblCursorPosition">
+            <TextBlock Grid.Row="3" Grid.Column="2" Name="lblCursorPosition"
+                       TextWrapping="Wrap">
                 <TextBlock.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </TextBlock.Background>
             </TextBlock>
-            <TextBlock Grid.Row="3" Grid.Column="2" Name="lblLineWidth">
+            <TextBlock Grid.Row="3" Grid.Column="1" Name="lblLineWidth">
                 <TextBlock.Background>
                     <SolidColorBrush Color="{StaticResource {x:Static SystemColors.ControlLightColorKey}}"/>
                 </TextBlock.Background>
             </TextBlock>
-            <StackPanel Grid.Row="1" Grid.Column="3" Width="25" Margin="102,50,22,0" Grid.RowSpan="2">
-                <Button Margin="0,10" x:Name="ZoomIn_btn" ToolTip="Zoom In" Click="ZoomIn_btn_Click">
-                    <Image Source="/Icons/plus_48x48.png"/>
-                </Button>
-                <Slider Thumb.DragDelta="Zoom_slider_DragDelta" Thumb.DragCompleted="Zoom_slider_DragCompleted" Name="Zoom_slider" Orientation="Vertical" HorizontalAlignment="Right" Maximum="100000" Minimum="-100000" Height="120" ValueChanged="Zoom_slider_ValueChanged" MouseLeftButtonUp="Zoom_slider_MouseLeftButtonUp" MouseLeftButtonDown="Zoom_slider_MouseLeftButtonDown" Margin="0,0,3,0" IsEnabled="False"/>
-                <Button Margin="0,10" x:Name="ZoomOut_btn" ToolTip="Zoom Out" Click="ZoomOut_btn_Click">
-                    <Image Source="/Icons/minus_48x48.png"/>
-                </Button>
-            </StackPanel>
         </Grid>
     </DockPanel>
 </UserControl>

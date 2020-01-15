@@ -27,13 +27,18 @@ namespace ArcMap
             InitializeComponent();
             string licenseKey = "runtimelite,1000,rud5233433699,none,NKMFA0PL4S4JLMZ59219";
             ArcGISRuntimeEnvironment.SetLicense(licenseKey);
+            this.Hide();
+            SplashScreen splash = new SplashScreen(this);
+            splash.Show();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            MessageBoxResult result = MessageBox.Show("Do you want to save data?", "Save", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            MessageBoxResult result = MessageBox.Show("Are you sure?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
-                new View.MapViewUC().Save_btn_Click(new object(), new RoutedEventArgs());
+            { }
+            else
+                e.Cancel = true;
         }
 
         // Map initialization logic is contained in MapViewModel.cs

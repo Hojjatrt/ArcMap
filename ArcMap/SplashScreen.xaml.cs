@@ -15,14 +15,14 @@ namespace ArcMap
     public partial class SplashScreen : Window
     {
         DispatcherTimer dis;
-        MainWindow main;
-        public SplashScreen()
+        private MainWindow main;
+        public SplashScreen(MainWindow main)
         {
             InitializeComponent();
             dis = new DispatcherTimer();
             dis.Interval = new TimeSpan(0, 0, 1);
             dis.Start();
-            main = new MainWindow();
+            this.main = main;
             dis.Tick += Dis_Tick;
         }
 

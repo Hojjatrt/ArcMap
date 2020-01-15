@@ -7,13 +7,29 @@
     <ProjectGuid>{FA150C67-D28B-4764-945C-DBDD0B4C486E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ArcMap</RootNamespace>
-    <AssemblyName>ArcMap</AssemblyName>
+    <RootNamespace>RCCMap</RootNamespace>
+    <AssemblyName>RCCMap</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <PublishWizardCompleted>true</PublishWizardCompleted>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,6 +53,33 @@
   <PropertyGroup>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>89617D72A3CFCFEE6CC2E1A091640B52830F5C02</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>ArcMap_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Win32Resource>
+    </Win32Resource>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>map1.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -63,11 +106,23 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Popup.xaml.cs">
-      <DependentUpon>Popup.xaml</DependentUpon>
+    <Compile Include="PopupCircle.xaml.cs">
+      <DependentUpon>PopupCircle.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PopupGoto.xaml.cs">
+      <DependentUpon>PopupGoto.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PopupPoint.xaml.cs">
+      <DependentUpon>PopupPoint.xaml</DependentUpon>
     </Compile>
     <Compile Include="PopupRect.xaml.cs">
       <DependentUpon>PopupRect.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PopupRename.xaml.cs">
+      <DependentUpon>PopupRename.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PopupWmsData.xaml.cs">
+      <DependentUpon>PopupWmsData.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModel\LayerDisplayVM.cs" />
     <Compile Include="ViewModel\MapViewModel.cs" />
@@ -97,11 +152,27 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MapViewModel.cs" />
-    <Page Include="Popup.xaml">
+    <Page Include="PopupCircle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PopupGoto.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PopupPoint.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PopupRect.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PopupRename.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PopupWmsData.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -144,6 +215,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -158,7 +230,7 @@
       <Version>100.4.0</Version>
     </PackageReference>
     <PackageReference Include="WpfAnimatedGif">
-      <Version>1.4.18</Version>
+      <Version>1.4.17</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -166,10 +238,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\search_32x32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Icons\minus_48x48.png" />
-    <Resource Include="Icons\plus_48x48.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\save_32x32.png" />
@@ -185,6 +253,59 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\loader.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\checked_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\circle_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\pin_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\line_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\polygon_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\rectangle_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\info_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\cursor_32x32.png" />
+    <Resource Include="Icons\hand_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\zoom-in_32x32.png" />
+    <Resource Include="Icons\zoom-out_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\digit_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\abc_32x32.png" />
+    <Resource Include="Icons\cleaner_32x32.png" />
+    <Resource Include="Icons\delete_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\add_32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\rcc.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="map1.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

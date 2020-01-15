@@ -1,0 +1,26 @@
+﻿<Window x:Class="ArcMap.PopupWmsData"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ArcMap"
+        mc:Ignorable="d"
+        Title="Identify features" Height="279.397" Width="776.918">
+    <Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="8*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="Tap to identify features."
+                           TextAlignment="Center"
+                           FontWeight="SemiBold" />
+            <DockPanel Grid.Column="0" Grid.Row="1">
+                <WebBrowser x:Name="BrowserView"/>
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>

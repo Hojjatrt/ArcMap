@@ -52,23 +52,28 @@ namespace ArcMap.View
         private Uri _wmsUrl = new Uri("http://localhost:6060/geoserver/test/wms?");
         // Hold a list of LayerDisplayVM; this is the ViewModel
         public ObservableCollection<LayerDisplayVM> _viewModelList = new ObservableCollection<LayerDisplayVM>();
-
+        private WmsLayer _wmsLayer;
         // Create and hold a list of uniquely-identifying WMS layer names to display
         private List<String> _wmsLayerNames = new List<string> { "topp:states", "test:roads", "test:DEM_of_Iran_30m" };
 
-        private bool zoom_slider_down;
         private Point _startPoint;
         private bool dragAction;
         private ListBoxItem _originatingListBoxItem;
+        private PopupWmsData popupWmsData;
+
+        private string _selectedTag = "";
 
         public GraphicsOverlayCollection GraphicLayers
         {
             get { return MyMapView.GraphicsOverlays; }
+            set { MyMapView.GraphicsOverlays = value; }
         }
+
         public LayerCollection OverLayers
         {
             get { return myMap.OperationalLayers; }
         }
+        
         #endregion
         public MapViewUC()
         {
@@ -124,48 +129,58 @@ namespace ArcMap.View
                 // Get the service info (metadata) from the service.
                 WmsServiceInfo info = service.ServiceInfo;
                 // Get the list of layer infos.
+                //LayerDisplayVM.BuildLayerInfoList(new LayerDisplayVM(info.LayerInfos[0], null), _viewModelList);
                 foreach (var layerInfo in info.LayerInfos)
                 {
                     LayerDisplayVM.BuildLayerInfoList(new LayerDisplayVM(layerInfo, null), _viewModelList);
+
                 }
 
                 // Update the map display based on the viewModel.
                 _viewModelList.RemoveAt(0);
+                _viewModelList[0].IsEnabled = false;
+                
+                foreach (var item in _viewModelList[0].Children)
+                {
+                    item.IsEnabled = true;
+                }
+                ObservableCollection<LayerDisplayVM> _viewModelList1 = new ObservableCollection<LayerDisplayVM>(_viewModelList[0].Children);
+                _viewModelList = _viewModelList1;
+                _viewModelList1 = null;
+                //var layernamesfile = "selectedlayers.txt";
+                //var layernames = "";
+                //try
+                //{
+                //    using (StreamReader sr = new StreamReader(layernamesfile))
+                //    {
+                //        layernames = sr.ReadToEnd();
+                //    }
+                //}
+                //catch (Exception)
+                //{
 
-                var layernamesfile = "selectedlayers.txt";
-                var layernames = "";
-                try
-                {
-                    using (StreamReader sr = new StreamReader(layernamesfile))
-                    {
-                        layernames = sr.ReadToEnd();
-                    }
-                }
-                catch (Exception)
-                {
-                    
-                }
-                string[] lines = layernames.Split('\n');
-                // Return if no layers are selected.
-                if (lines.Length != 0)
-                {
-                    foreach (var layername in lines)
-                    {
-                        var layer = _viewModelList.Where(vm => vm.Info.Name == layername.Trim('\r') && !vm.IsEnabled).Select(vm => vm).ToList();
-                        if(layer.Any())
-                        {
-                            foreach (var item in layer)
-                            {
-                                item.IsEnabled = true;
-                            }
-                        }
-                    }
-                }
+                //}
+                //string[] lines = layernames.Split('\n');
+                //// Return if no layers are selected.
+                //if (lines.Length != 0)
+                //{
+                //    foreach (var layername in lines)
+                //    {
+                //        var layer = _viewModelList.Where(vm => vm.Info.Name == layername.Trim('\r') && !vm.IsEnabled).Select(vm => vm).ToList();
+                //        if (layer.Any())
+                //        {
+                //            foreach (var item in layer)
+                //            {
+                //                item.IsEnabled = true;
+                //            }
+                //        }
+                //    }
+                //}
 
                 UpdateMapDisplay(_viewModelList);
 
                 // Update the list of layers.
-                LayerTreeView.ItemsSource = _viewModelList.Take(1);
+                LayerTreeView.ItemsSource = _viewModelList.AsEnumerable();
 
             }
             catch (Exception e)
@@ -173,14 +188,21 @@ namespace ArcMap.View
                 MessageBox.Show(e.ToString(), "Error");
             }
 
+            MapPoint point =
+                        CoordinateFormatter.FromLatitudeLongitude("40N 63 30E", MyMapView.SpatialReference);
+            MapPoint point2 =
+                        CoordinateFormatter.FromLatitudeLongitude("25N 44E", MyMapView.SpatialReference);
+            Envelope initialLocation = new Envelope(
+                point.X, point.Y, point2.X, point2.Y,
+                SpatialReferences.Wgs84);
+            myMap.InitialViewpoint = new Viewpoint(initialLocation);
             // Provide used Map to the MapView
             MyMapView.Map = myMap;
             // Set Viewpoint so that it is centered on the coordinates defined bottom
-            await MyMapView.SetViewpointCenterAsync(29.70, 57.22);
+            //await MyMapView.SetViewpointCenterAsync(29.70, 60.22);
 
             // Set the Viewpoint scale to match the specified scale 
-            await MyMapView.SetViewpointScaleAsync(876000);
-            //LayersListView.ItemsSource = myMap.OperationalLayers;
+            //await MyMapView.SetViewpointScaleAsync(876000);
         }
         private void InitializeDistance()
         {
@@ -205,7 +227,7 @@ namespace ArcMap.View
             // Create graphics overlay to display sketch geometry
             _sketchOverlay = new GraphicsOverlay()
             {
-                Id = "layer 1"
+                Id = "Temp"
             };
             //MyMapView.GraphicsOverlays.Clear();
             MyMapView.GraphicsOverlays.Add(_sketchOverlay);
@@ -213,10 +235,6 @@ namespace ArcMap.View
 
             // Assign the map to the MapView
             MyMapView.Map = myMap;
-
-            // Fill the combo box with choices for the sketch modes (shapes)
-            SketchModeComboBox.ItemsSource = Enum.GetValues(typeof(SketchCreationMode));
-            SketchModeComboBox.SelectedIndex = 0;
 
             // Fill the color combo box with choices for the sketch colors
             SketchColorComboBox.ItemsSource = colors;
@@ -316,17 +334,17 @@ namespace ArcMap.View
             }
 
             // Write the string array to a new file named "selectedlayers.txt".
-            using (StreamWriter outputFile = new StreamWriter("selectedlayers.txt"))
-            {
-                foreach (var item in selectedLayers)
-                    outputFile.WriteLine(item.Name);
-            }
+            //using (StreamWriter outputFile = new StreamWriter("selectedlayers.txt"))
+            //{
+            //    foreach (var item in selectedLayers)
+            //        outputFile.WriteLine(item.Name);
+            //}
 
             // Create a new WmsLayer from the selected layers.
-            WmsLayer myLayer = new WmsLayer(selectedLayers);
+            _wmsLayer = new WmsLayer(selectedLayers);
             
             // Add the layer to the map.
-            MyMapView.Map.OperationalLayers.Add(myLayer);
+            MyMapView.Map.OperationalLayers.Add(_wmsLayer);
         }
 
 
@@ -335,6 +353,48 @@ namespace ArcMap.View
             // Update the map. Note: updating selection is handled by the IsEnabled property on LayerDisplayVM.
             UpdateMapDisplay(_viewModelList);
         }
+
+        private async void MyMapView_GeoViewTapped(object sender, GeoViewInputEventArgs e)
+        {
+            if (popupWmsData == null)
+                return;
+            // Hide the old result.
+            popupWmsData.Browser.Visibility = Visibility.Collapsed;
+
+            try
+            {
+                // Perform the identify operation.
+                IdentifyLayerResult myIdentifyResult = await MyMapView.IdentifyLayerAsync(_wmsLayer, e.Position, 20, false);
+
+                // Return if there's nothing to show.
+                if (!myIdentifyResult.GeoElements.Any())
+                {
+                    return;
+                }
+
+                // Retrieve the identified feature, which is always a WmsFeature for WMS layers.
+                WmsFeature identifiedFeature = (WmsFeature)myIdentifyResult.GeoElements[0];
+
+                // Retrieve the WmsFeature's HTML content.
+                string htmlContent = identifiedFeature.Attributes["HTML"].ToString();
+
+                // Note that the service returns a boilerplate HTML result if there is no feature found.
+                // This test should work for most arcGIS-based WMS services, but results may vary.
+                //if (!htmlContent.Contains("OBJECTID"))
+                //{
+                //    // Return without showing the result.
+                //    return;
+                //}
+
+                // Show the result.
+                popupWmsData.Browser.Visibility = Visibility.Visible;
+                popupWmsData.Browser.NavigateToString(htmlContent);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error");
+            }
+        }
         #endregion Wms Service config
 
         #region toolbar buttons
@@ -342,8 +402,6 @@ namespace ArcMap.View
         {
             if (distance_panel.Visibility == Visibility.Collapsed)
             {
-                sketch_panel.Visibility = Visibility.Collapsed;
-                layers_panel.Visibility = Visibility.Collapsed;
                 distance_panel.Visibility = Visibility.Visible;
 
                 Mouse.OverrideCursor = Cursors.Pen;
@@ -364,6 +422,351 @@ namespace ArcMap.View
 
         }
 
+        private void Identify_btn_Click(object sender, RoutedEventArgs e)
+        {
+            popupWmsData = new PopupWmsData
+            {
+                Topmost = true
+            };
+            popupWmsData.Show();
+        }
+
+        public double GetMyMapViewScale
+        {
+            get => MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale).TargetScale;
+
+        }
+
+        private void Polyline_btn_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = (Button)sender;
+            _selectedTag = btn.Tag.ToString();
+            if (distance_panel.Visibility == Visibility.Collapsed)
+            {
+                distance_panel.Visibility = Visibility.Visible;
+
+                Mouse.OverrideCursor = Cursors.Pen;
+                _distanceOverlay.Graphics.Clear();
+                MyMapView.DismissCallout();
+                start_distance = true;
+                first = last = null;
+            }
+            else
+            {
+                distance_panel.Visibility = Visibility.Collapsed;
+                Mouse.OverrideCursor = null;
+                _distanceOverlay.Graphics.Clear();
+                MyMapView.DismissCallout();
+                start_distance = false;
+                first = last = null;
+            }
+        }
+
+
+        private void DrawShapes_btn_Click(object sender, RoutedEventArgs e)
+        {
+            var obj = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+            if (SketchLayerComboBox.SelectedIndex == -1)
+            {
+                MessageBox.Show("Select a layer, please!", "Warning", MessageBoxButton.OK);
+                return;
+            }
+            else if (obj.Id == "Distance layer")
+            {
+                MessageBox.Show("Select another layer!\nYou can't draw on this layer.", "Warning", MessageBoxButton.OK);
+                return;
+            }
+            var btn = (Button)sender;
+            _selectedTag = btn.Tag.ToString();
+            switch (btn.Tag)
+            {
+                case "Rectangle":
+                    {
+                        Draw(SketchCreationMode.Rectangle);
+                        break;
+                    }
+                case "Circle":
+                    {
+                        Draw(SketchCreationMode.Circle);
+                        break;
+                    }
+                case "Polygon":
+                    {
+                        Draw(SketchCreationMode.Polygon);
+                        break;
+                    }
+                case "Polyline":
+                    {
+                        Draw(SketchCreationMode.Polyline);
+                        break;
+                    }
+                case "Point":
+                    {
+                        Draw(SketchCreationMode.Point);
+                        break;
+                    }
+                default:
+                    break;
+
+            }
+        }
+
+        private void DrawByValueButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Mouse.OverrideCursor = null;
+
+                try
+                {
+                    MyMapView.SketchEditor.CancelCommand.Execute(null);
+                }
+                catch (Exception)
+                {
+                    // Ignore ... let the user cancel editing
+                }
+
+                if (_selectedTag == "Point")
+                {
+                    PopupPoint popup = new PopupPoint(MyMapView);
+                    bool? result = popup.ShowDialog();
+                    //if (result == true)
+                    {
+                        if (popup.MapPoint != null)
+                            DrawPoint(popup);
+                    }
+                }
+                else if (_selectedTag == "Circle")
+                {
+                    PopupCircle popup = new PopupCircle(MyMapView);
+                    bool? result = popup.ShowDialog();
+                    //if (result == true)
+                    {
+                        if (popup.Radius != 0)
+                            DrawCircle(popup);
+                    }
+                }
+                else if (_selectedTag == "Rectangle")
+                {
+                    PopupRect popup = new PopupRect(MyMapView);
+                    bool? result = popup.ShowDialog();
+                    //if (result == true)
+                    {
+                        if (popup.mapPoint != null && popup.mapPoint2 != null)
+                            DrawRectangle(popup);
+                    }
+                }
+                _selectedTag = "";
+            }
+            catch(Exception)
+            {
+
+            }
+        }
+
+        private void CompleteDraw_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Mouse.OverrideCursor = null;
+            if (_sketchOverlay.Graphics.Count > 0)
+            {
+                ClearLayer_btn.IsEnabled = true;
+                RenameLayer_btn.IsEnabled = true;
+                DeleteLayer_btn.IsEnabled = true;
+                ArrowMouse_btn.IsEnabled = true;
+            }
+            else
+            {
+                ClearLayer_btn.IsEnabled = false;
+                RenameLayer_btn.IsEnabled = false;
+                DeleteLayer_btn.IsEnabled = false;
+                ArrowMouse_btn.IsEnabled = false;
+            }
+            _selectedTag = "";
+        }
+
+        private void PanMouse_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Mouse.OverrideCursor = Cursors.Hand;
+            
+            try
+            {
+                MyMapView.SketchEditor.CancelCommand.Execute(null);
+            }
+            catch (Exception)
+            {
+                // Ignore ... let the user cancel editing
+            }
+        }
+
+        private async void ArrowMouse_btn_Click(object sender, RoutedEventArgs e)
+        {
+            Mouse.OverrideCursor = null;
+            try
+            {
+                // Allow the user to select a graphic
+                Graphic editGraphic = await GetGraphicAsync();
+                if (editGraphic == null) { return; }
+                else
+                {
+                    MessageBoxResult result = MessageBox.Show("Delete graphic?", "Delete shape", MessageBoxButton.YesNo);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        editGraphic.GraphicsOverlay.Graphics.Remove(editGraphic);
+                        return;
+                    }
+                }
+                // Let the user make changes to the graphic's geometry, await the result (updated geometry)
+                Geometry newGeometry = await MyMapView.SketchEditor.StartAsync(editGraphic.Geometry);
+                
+                
+                // Display the updated geometry in the graphic
+                editGraphic.Geometry = newGeometry;
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignore ... let the user cancel editing
+            }
+            catch (Exception ex)
+            {
+                // Report exceptions
+                MessageBox.Show("Error editing shape: " + ex.Message);
+            }
+        }
+
+        private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
+        {
+            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - 100000);
+        }
+
+        private async void ZoomOut_btn_Click(object sender, RoutedEventArgs e)
+        {
+            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale + 100000);
+        }
+
+        private void RenameLayer_btn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+                if (_sketchOverlay.Id == "Distance layer")
+                {
+                    MessageBox.Show("You can't rename this layer!", "Warning", MessageBoxButton.OK);
+                    return;
+                }
+                PopupRename popup = new PopupRename(_sketchOverlay, GraphicLayers);
+                popup.ShowDialog();
+                if (popup.Graphics != null && GraphicLayers["Temp"] == null)
+                {
+                    GraphicLayers.Add(new GraphicsOverlay() { Id = "Temp" });
+                }
+                _sketchOverlay = GraphicLayers["Temp"];
+                SketchLayerComboBox.ItemsSource = null;
+                SketchLayerComboBox.ItemsSource = GraphicLayers;
+                GraphicLayesrListBox.ItemsSource = null;
+                GraphicLayesrListBox.ItemsSource = GraphicLayers;
+            }
+            catch(Exception)
+            {
+                MessageBox.Show("Please select a layer!", "Error", MessageBoxButton.OK);
+            }
+        }
+
+        private void DeleteLayer_btn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+                if (_sketchOverlay.Id == "Temp" || _sketchOverlay.Id == "Distance layer")
+                {
+                    MessageBox.Show("You can't delete this layer!", "Warning", MessageBoxButton.OK);
+                    return;
+                }
+                MessageBoxResult result = MessageBox.Show("Are you sure to delete this layer?", "Delete layer", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.No)
+                    return;
+                GraphicLayers.Remove(_sketchOverlay);
+                _sketchOverlay = GraphicLayers[0];
+
+            if (_sketchOverlay.Graphics.Count > 0)
+                {
+                    ClearLayer_btn.IsEnabled = true;
+                    RenameLayer_btn.IsEnabled = true;
+                    DeleteLayer_btn.IsEnabled = true;
+                    ArrowMouse_btn.IsEnabled = true;
+                }
+                else
+                {
+                    ClearLayer_btn.IsEnabled = false;
+                    RenameLayer_btn.IsEnabled = false;
+                    DeleteLayer_btn.IsEnabled = false;
+                    ArrowMouse_btn.IsEnabled = false;
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("can't delete this layer!", "Error", MessageBoxButton.OK);
+            }
+        }
+        private void ClearButtonClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+                // Remove all graphics from the graphics overlay
+                MessageBoxResult result = MessageBox.Show("All graphics of selected layer will be remove.\nAre you sure?", "Clear layer", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    _sketchOverlay.Graphics.Clear();
+
+                    // Disable buttons that require graphics
+                    ClearLayer_btn.IsEnabled = false;
+                    ArrowMouse_btn.IsEnabled = false;
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Please select a layer!", "Error", MessageBoxButton.OK);
+            }
+        }
+
+        private void SketchLayerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                //if(SketchLayerComboBox.SelectedIndex > GraphicLayers.Count -1)
+                _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+                if (_sketchOverlay.Id == "Distance layer")
+                {
+                    RenameLayer_btn.IsEnabled = false;
+                    DeleteLayer_btn.IsEnabled = false;
+                }
+                else if (_sketchOverlay.Id == "Temp")
+                {
+                    DeleteLayer_btn.IsEnabled = false;
+                    RenameLayer_btn.IsEnabled = true;
+                }
+                else
+                {
+                    RenameLayer_btn.IsEnabled = true;
+                    DeleteLayer_btn.IsEnabled = true;
+                }
+                if (_sketchOverlay.Graphics.Count > 0)
+                {
+                    ClearLayer_btn.IsEnabled = true;
+                    ArrowMouse_btn.IsEnabled = true;
+                }
+                else
+                {
+                    ClearLayer_btn.IsEnabled = false;
+                    ArrowMouse_btn.IsEnabled = false;
+                }
+
+            }
+            catch (Exception)
+            {
+                
+            }
+        }
         #endregion
 
         #region Graphic and symbol helpers
@@ -448,65 +851,69 @@ namespace ArcMap.View
         }
         #endregion
 
-        #region edit graphic btns
-        private void DrawByValueButton_Click(object sender, RoutedEventArgs e)
+        #region Draw graphic methods
+
+        private void DrawCircle(PopupCircle popup)
         {
-            if ((SketchCreationMode)SketchModeComboBox.SelectedItem == SketchCreationMode.Circle)
+            try
             {
-                Popup popup = new Popup();
-                bool? result = popup.ShowDialog();
-                //if (result == true)
-                {
-                    if (popup.Radius != 0)
-                        DrawCircle(popup);
-                }
+                // Create a geodesic buffer graphic using the same location and distance.
+                Geometry bufferGeometryGeodesic = GeometryEngine.BufferGeodetic(popup.MapPoint, popup.Radius, LinearUnits.NauticalMiles, double.NaN, GeodeticCurveType.Geodesic);
+                Graphic geodesicBufferGraphic = CreateGraphic(bufferGeometryGeodesic, colors[SketchColorComboBox.SelectedIndex]);
+                _sketchOverlay.Graphics.Add(CreateGraphic(popup.MapPoint, Color.Red));
+                _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
             }
-            else if ((SketchCreationMode)SketchModeComboBox.SelectedItem == SketchCreationMode.Rectangle)
+            catch (Exception ex)
             {
-                PopupRect popup = new PopupRect();
-                bool? result = popup.ShowDialog();
-                //if (result == true)
-                {
-                    if (popup.mapPoint != "" && popup.mapPoint2 != "")
-                        DrawRectangle(popup);
-                }
+                // Report exceptions
+                MessageBox.Show("Error drawing graphic shape: " + ex.Message);
             }
         }
 
-        private void DrawCircle(Popup popup)
+        private void DrawPoint(PopupPoint popup)
         {
-            MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
-            // Create a geodesic buffer graphic using the same location and distance.
-            Geometry bufferGeometryGeodesic = GeometryEngine.BufferGeodetic(tappedPoint, popup.Radius, LinearUnits.Miles, double.NaN, GeodeticCurveType.Geodesic);
-            Graphic geodesicBufferGraphic = CreateGraphic(bufferGeometryGeodesic, colors[SketchColorComboBox.SelectedIndex]);
-            _sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
-            _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
+            try
+            {
+                Graphic graphic = CreateGraphic(popup.MapPoint, colors[SketchColorComboBox.SelectedIndex]);
+                _sketchOverlay.Graphics.Add(graphic);
+            }
+            catch (Exception ex)
+            {
+                // Report exceptions
+                MessageBox.Show("Error drawing graphic shape: " + ex.Message);
+            }
         }
         private void DrawRectangle(PopupRect popup)
         {
-            MapPoint tappedPoint = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint, SpatialReferences.Wgs84);
-            MapPoint tappedPoint2 = CoordinateFormatter.FromLatitudeLongitude(popup.mapPoint2, SpatialReferences.Wgs84);
-            // Create a geodesic buffer graphic using the same location and distance.
-            PointCollection pointCollection = new PointCollection(SpatialReferences.Wgs84);
-            pointCollection.Add(tappedPoint);
-            pointCollection.Add(new MapPoint(tappedPoint.X, tappedPoint2.Y));
-            pointCollection.Add(tappedPoint2);
-            pointCollection.Add(new MapPoint(tappedPoint2.X, tappedPoint.Y));
-            pointCollection.Add(tappedPoint);
-            var polygon = new Polygon(pointCollection);
-            polygon.ToString();
+            try
+            {
+                // Create a geodesic buffer graphic using the same location and distance.
+                PointCollection pointCollection = new PointCollection(SpatialReferences.Wgs84);
+                pointCollection.Add(popup.mapPoint);
+                pointCollection.Add(new MapPoint(popup.mapPoint.X, popup.mapPoint2.Y));
+                pointCollection.Add(popup.mapPoint2);
+                pointCollection.Add(new MapPoint(popup.mapPoint2.X, popup.mapPoint.Y));
+                pointCollection.Add(popup.mapPoint);
+                var polygon = new Polygon(pointCollection);
+                polygon.ToString();
 
-            Graphic geodesicBufferGraphic = CreateGraphic(polygon, colors[SketchColorComboBox.SelectedIndex]);
-            //_sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
-            _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
+                Graphic geodesicBufferGraphic = CreateGraphic(polygon, colors[SketchColorComboBox.SelectedIndex]);
+                //_sketchOverlay.Graphics.Add(CreateGraphic(tappedPoint, Color.Red));
+                _sketchOverlay.Graphics.Add(geodesicBufferGraphic);
+            }
+            catch(Exception ex)
+            {
+                // Report exceptions
+                MessageBox.Show("Error drawing graphic shape: " + ex.Message);
+            }
         }
 
-        private async void DrawButtonClick(object sender, RoutedEventArgs e)
+        private async void Draw(SketchCreationMode creationMode)
         {
             try
             {
                 // Let the user draw on the map view using the chosen sketch mode
-                SketchCreationMode creationMode = (SketchCreationMode)SketchModeComboBox.SelectedItem;
+                Mouse.OverrideCursor = Cursors.Pen;
                 Color creationColor = colors[SketchColorComboBox.SelectedIndex];
                 Geometry geometry = await MyMapView.SketchEditor.StartAsync(creationMode, true);
 
@@ -518,8 +925,8 @@ namespace ArcMap.View
                 _sketchOverlay.Graphics.Add(graphic);
 
                 // Enable/disable the clear and edit buttons according to whether or not graphics exist in the overlay
-                ClearButton.IsEnabled = _sketchOverlay.Graphics.Count > 0;
-                EditButton.IsEnabled = _sketchOverlay.Graphics.Count > 0;
+                ClearLayer_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
+                ArrowMouse_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
             }
             catch (TaskCanceledException)
             {
@@ -533,71 +940,7 @@ namespace ArcMap.View
 
         }
 
-        private void ClearButtonClick(object sender, RoutedEventArgs e)
-        {
-            // Remove all graphics from the graphics overlay
-            MessageBoxResult result = MessageBox.Show("Are you sure?\nthe layer and all graphics will remove.", "question", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                _sketchOverlay.Graphics.Clear();
-
-                // Disable buttons that require graphics
-                ClearButton.IsEnabled = false;
-                EditButton.IsEnabled = false;
-            }
-        }
-
-        private async void EditButtonClick(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Allow the user to select a graphic
-                Graphic editGraphic = await GetGraphicAsync();
-                if (editGraphic == null) { return; }
-
-                // Let the user make changes to the graphic's geometry, await the result (updated geometry)
-                Geometry newGeometry = await MyMapView.SketchEditor.StartAsync(editGraphic.Geometry);
-
-                // Display the updated geometry in the graphic
-                editGraphic.Geometry = newGeometry;
-            }
-            catch (TaskCanceledException)
-            {
-                // Ignore ... let the user cancel editing
-            }
-            catch (Exception ex)
-            {
-                // Report exceptions
-                MessageBox.Show("Error editing shape: " + ex.Message);
-            }
-        }
-        #endregion
-
-        #region panel_btns
-        private void draw_sketch_btn_Click(object sender, RoutedEventArgs e)
-        {
-            if (sketch_panel.Visibility == Visibility.Collapsed)
-            {
-                sketch_panel.Visibility = Visibility.Visible;
-                layers_panel.Visibility = Visibility.Collapsed;
-                distance_panel.Visibility = Visibility.Collapsed;
-            }
-            else
-                sketch_panel.Visibility = Visibility.Collapsed;
-        }
-
-        private void layers_btn_Click(object sender, RoutedEventArgs e)
-        {
-            if (layers_panel.Visibility == Visibility.Collapsed)
-            {
-                sketch_panel.Visibility = Visibility.Collapsed;
-                layers_panel.Visibility = Visibility.Visible;
-                distance_panel.Visibility = Visibility.Collapsed;
-            }
-            else
-                layers_panel.Visibility = Visibility.Collapsed;
-        }
-        #endregion
+        #endregion Draw graphic methods
 
         #region Drag and drop support
 
@@ -723,30 +1066,17 @@ namespace ArcMap.View
 
             return parentElement as ListBox;
         }
-
-        private void SketchLayerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //if(SketchLayerComboBox.SelectedIndex > GraphicLayers.Count -1)
-            _sketchOverlay = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
-            if (_sketchOverlay.Graphics.Count > 0)
-            {
-                ClearButton.IsEnabled = true;
-                EditButton.IsEnabled = true;
-            }
-            else
-            {
-                ClearButton.IsEnabled = false;
-                EditButton.IsEnabled = false;
-            }
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void AddNewGraphicLayer_btn_Click(object sender, RoutedEventArgs e)
         {
             GraphicsOverlay g = new GraphicsOverlay()
             {
                 Id = "layer " + (MyMapView.GraphicsOverlays.Count)
             };
             GraphicLayers.Add(g);
+        }
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
         #endregion Drag and drop support
 
@@ -973,7 +1303,7 @@ namespace ArcMap.View
             {
                 MapPoint Point = MyMapView.ScreenToLocation(e.GetPosition(MyMapView));
                 MapPoint projectedPoint = (MapPoint)GeometryEngine.Project(Point, SpatialReferences.Wgs84);
-                string projectedCoords = string.Format("lat: {1:F4}, lng: {0:F4}", projectedPoint.X, projectedPoint.Y);
+                string projectedCoords = CoordinateFormatter.ToLatitudeLongitude(projectedPoint, LatitudeLongitudeFormat.DegreesMinutesSeconds, 2); //string.Format("lat: {1:F4}, lng: {0:F4}", projectedPoint.X, projectedPoint.Y);
                 if (start_distance && first != null)
                 {
                     _distanceOverlay.Graphics.Clear();
@@ -1063,6 +1393,7 @@ namespace ArcMap.View
             // convert radians to degrees (as bearing: 0...360)
             return (ToDegrees(radians) + 360) % 360;
         }
+
         #endregion
 
         #region distance meaturment
@@ -1094,70 +1425,41 @@ namespace ArcMap.View
         #endregion
 
         #region Goto
-        private async void Goto_btn_Click(object sender, RoutedEventArgs e)
+        private void Goto_btn_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                MapPoint mapPoint = new MapPoint(Convert.ToDouble(Routey_TextField.Text), Convert.ToDouble(Routex_TextField.Text));
-                await MyMapView.SetViewpointCenterAsync(mapPoint);
-
-                // Set the Viewpoint scale to match the specified scale 
-                await MyMapView.SetViewpointScaleAsync(876200);
-
+                PopupGoto popupGoto = new PopupGoto(MyMapView);
+                bool? check = popupGoto.ShowDialog();
+                if (check == false && popupGoto.LatLng != null)
+                    _sketchOverlay.Graphics.Add(CreateGraphic(popupGoto.LatLng, Color.Red));
             }
             catch (Exception)
             {
-                MessageBox.Show("Lat & Lng Field cannot be empty!", "Error", MessageBoxButton.OK);
+                MessageBox.Show("Error in the format of Coords!", "Error", MessageBoxButton.OK);
             }
         }
         #endregion GOTO
 
-        #region Zoom options
+        #region Key down
 
-        public double GetMyMapViewScale
+        private void MyMapView_KeyDown(object sender, KeyEventArgs e)
         {
-            get => MyMapView.GetCurrentViewpoint(ViewpointType.CenterAndScale).TargetScale;
-            
-        }
+            if (e.Key == Key.Escape)
+            {
+                Mouse.OverrideCursor = null;
 
-        private async void Zoom_slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            //double value = e.NewValue;
-            //await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
+                try
+                {
+                    MyMapView.SketchEditor.CancelCommand.Execute(null);
+                }
+                catch (Exception)
+                {
+                    // Ignore ... let the user cancel editing
+                }
+            }
         }
-
-        private void Zoom_slider_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            this.zoom_slider_down = false;
-        }
-
-        private void Zoom_slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
-        {
-            Zoom_slider.Value = 0;
-        }
-
-        private async void Zoom_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
-        {
-            double value = Zoom_slider.Value;
-            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - value);
-        }
-
-        private async void Zoom_slider_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-           
-        }
-
-        private async void ZoomIn_btn_Click(object sender, RoutedEventArgs e)
-        {
-            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale - 100000);
-        }
-
-        private async void ZoomOut_btn_Click(object sender, RoutedEventArgs e)
-        {
-            await MyMapView.SetViewpointScaleAsync(GetMyMapViewScale + 100000);
-        }
-        
-        #endregion
+        #endregion Key down
     }
 
 }
