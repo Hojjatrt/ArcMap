@@ -42,7 +42,7 @@ namespace ArcMap.View
         // Colors.
         private Color[] colors;
         // Distance variables
-        private bool start_distance;
+        private bool start_distance, start_polyline;
         private MapPoint first, last;
         private double _distance, _angle;
         private string distance_type;
@@ -439,27 +439,32 @@ namespace ArcMap.View
 
         private void Polyline_btn_Click(object sender, RoutedEventArgs e)
         {
+            var obj = SketchLayerComboBox.SelectedValue as GraphicsOverlay;
+            if (SketchLayerComboBox.SelectedIndex == -1)
+            {
+                MessageBox.Show("Select a layer, please!", "Warning", MessageBoxButton.OK);
+                return;
+            }
+            else if (obj.Id == "Distance layer")
+            {
+                MessageBox.Show("Select another layer!\nYou can't draw on this layer.", "Warning", MessageBoxButton.OK);
+                return;
+            }
             var btn = (Button)sender;
             _selectedTag = btn.Tag.ToString();
             if (distance_panel.Visibility == Visibility.Collapsed)
             {
                 distance_panel.Visibility = Visibility.Visible;
 
-                Mouse.OverrideCursor = Cursors.Pen;
+                //Mouse.OverrideCursor = Cursors.Pen;
                 _distanceOverlay.Graphics.Clear();
-                MyMapView.DismissCallout();
-                start_distance = true;
-                first = last = null;
             }
-            else
-            {
-                distance_panel.Visibility = Visibility.Collapsed;
-                Mouse.OverrideCursor = null;
-                _distanceOverlay.Graphics.Clear();
-                MyMapView.DismissCallout();
-                start_distance = false;
-                first = last = null;
-            }
+
+            Mouse.OverrideCursor = Cursors.Pen;
+            MyMapView.DismissCallout();
+            start_distance = true;
+            start_polyline = true;
+            first = last = null;
         }
 
 
@@ -495,11 +500,11 @@ namespace ArcMap.View
                         Draw(SketchCreationMode.Polygon);
                         break;
                     }
-                case "Polyline":
-                    {
-                        Draw(SketchCreationMode.Polyline);
-                        break;
-                    }
+                //case "Polyline":
+                //    {
+                //        Draw(SketchCreationMode.Polyline);
+                //        break;
+                //    }
                 case "Point":
                     {
                         Draw(SketchCreationMode.Point);
@@ -1253,7 +1258,7 @@ namespace ArcMap.View
             // which in this case is WebMercator because that is the SR used by the included basemaps.
             MapPoint tappedPoint = MyMapView.ScreenToLocation(e.Position);
             // Update the graphics.
-            if (start_distance == true)
+            if (start_distance)
             {
                 _distanceOverlay.Graphics.Clear();
 
@@ -1283,9 +1288,9 @@ namespace ArcMap.View
                 {
                     Show_results(projectedPoint);
                     start_distance = false;
+                    start_polyline = false;
                     Mouse.OverrideCursor = null;
                 }
-
             }
         }
         private void MyMapView_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -1325,22 +1330,35 @@ namespace ArcMap.View
             // show the results in the text blocks
             coordinate_text.Text = string.Format("{0} : {1} && {2}", "Coordiantes",
                 first_projectedCoord, last_projectedCoord);
-            _distance = distance(first.Y, first.X, projectedPoint.Y, projectedPoint.X, distance_type[0]);
-            distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
-                _distance, distance_type);
-            _angle = DegreeBearing(first.Y, first.X, projectedPoint.Y, projectedPoint.X);
-            angle_text.Text = string.Format("{0} : {1:F0}", "Radial/Bearing", _angle);
+            //_distance = distance(first.Y, first.X, projectedPoint.Y, projectedPoint.X, distance_type[0]);
+            //distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
+            //    _distance, distance_type);
+            //_angle = DegreeBearing(first.Y, first.X, projectedPoint.Y, projectedPoint.X);
+            //angle_text.Text = string.Format("{0} : {1:F0}", "Radial/Bearing", _angle);
+            measure_distance(first, projectedPoint, distance_type);
 
             MapPoint[] arr = new MapPoint[2];
             arr[0] = first;
             arr[1] = projectedPoint;
             Polyline pline = new Polyline(arr);
-            Color creationColor = Color.Red;
+            Color creationColor = colors[SketchColorComboBox.SelectedIndex];
             // Create and add a graphic from the geometry the user drew
             Graphic graphic = CreateGraphic(pline, creationColor);
-            _distanceOverlay.Graphics.Add(new Graphic(first));
-            _distanceOverlay.Graphics.Add(new Graphic(projectedPoint));
-            _distanceOverlay.Graphics.Add(graphic);
+            if (start_polyline && last != null)
+            {
+                _distanceOverlay.Graphics.Clear();
+                _sketchOverlay.Graphics.Add(CreateGraphic(first, Color.Red));
+                _sketchOverlay.Graphics.Add(CreateGraphic(projectedPoint, Color.Red));
+                _sketchOverlay.Graphics.Add(graphic);
+                ClearLayer_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
+                ArrowMouse_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
+            }
+            else
+            {
+                _distanceOverlay.Graphics.Add(new Graphic(first));
+                _distanceOverlay.Graphics.Add(new Graphic(projectedPoint));
+                _distanceOverlay.Graphics.Add(graphic);
+            }
         }
         private void distance_type_combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1360,9 +1378,7 @@ namespace ArcMap.View
             }
             if (first != null && last != null)
             {
-                _distance = distance(first.Y, first.X, last.Y, last.X, distance_type[0]);
-                distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance",
-                    _distance, distance_type);
+                measure_distance(first, last, distance_type);
             }
         }
         #endregion
@@ -1397,29 +1413,39 @@ namespace ArcMap.View
         #endregion
 
         #region distance meaturment
-        private double distance(double lat1, double lon1, double lat2, double lon2, char unit)
+        private double measure_distance(MapPoint mapPoint1, MapPoint mapPoint2, string un)
         {
-            if ((lat1 == lat2) && (lon1 == lon2))
+            LinearUnit unit = LinearUnits.Kilometers;
+            switch (un)
             {
-                return 0;
+                case "Km":
+                    unit = LinearUnits.Kilometers;
+                    break;
+                case "M":
+                    unit = LinearUnits.Miles;
+                    break;
+                case "NM":
+                    unit = LinearUnits.NauticalMiles;
+                    break;
             }
-            else
+            try
             {
-                double theta = lon1 - lon2;
-                double dist = Math.Sin(ToRad(lat1)) * Math.Sin(ToRad(lat2)) + Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) * Math.Cos(ToRad(theta));
-                dist = Math.Acos(dist);
-                dist = ToDegrees(dist);
-                dist = dist * 60 * 1.1515;
-                if (unit == 'K')
-                {
-                    dist = dist * 1.609344;
-                }
-                else if (unit == 'N')
-                {
-                    dist = dist * 0.8684;
-                }
-                return (dist);
+                GeodeticDistanceResult result = GeometryEngine.DistanceGeodetic(mapPoint1, mapPoint2, unit, AngularUnits.Degrees, GeodeticCurveType.NormalSection);
+                double azimuth = (result.Azimuth1 + 360) % 360;
+                angle_text.Text = string.Format("{0} : {1:F1}", "Radial/Bearing", azimuth);
+                _distance = result.Distance;
+                distance_text.Text = string.Format("{0} : {1:F1} {2}", "Distance", _distance, distance_type);
+                return _distance;
             }
+            catch (Exception) { return 0; }
+        }
+
+        private MapPoint measure_second_point(double lat1, double lon1, double distance, double bearing)
+        {
+            double angular_dis = distance / 6371;
+            double lat2 = Math.Asin(Math.Sin(lat1) * Math.Cos(angular_dis) + Math.Cos(lat1) * Math.Sin(angular_dis) * Math.Cos(bearing));
+            double lon2 = lon1 + Math.Atan2(Math.Sin(bearing) * Math.Sin(angular_dis) * Math.Cos(lat1), Math.Cos(angular_dis) - Math.Sin(lat1) * Math.Sin(lat2));
+            return new MapPoint(lon2, lat2);
         }
 
         #endregion

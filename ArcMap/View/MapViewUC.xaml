@@ -45,7 +45,7 @@
             <Button ToolTip="Point" Tag="Point" Click="DrawShapes_btn_Click">
                 <Image Source="/Icons/pin_32x32.png"/>
             </Button>
-            <Button x:Name="Polyline_btn" ToolTip="Pilyline" Tag="Polyline" Click="Polyline_btn_Click">
+            <Button x:Name="Polyline_btn" ToolTip="Polyline" Tag="Polyline" Click="Polyline_btn_Click">
                 <Image Source="/Icons/line_32x32.png"/>
             </Button>
             <Button ToolTip="Polygon" Tag="Polygon" Click="DrawShapes_btn_Click">
