@@ -26,6 +26,7 @@ using ArcMap.ViewModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Reflection;
+using RCCMap;
 
 namespace ArcMap.View
 {
@@ -103,7 +104,7 @@ namespace ArcMap.View
         private async void Initialize()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "wmsdatafile.txt";
+            var resourceName = "WmsDataFile.txt";
             try
             {
                 using (StreamReader sr = new StreamReader(resourceName))
@@ -541,6 +542,16 @@ namespace ArcMap.View
                             DrawPoint(popup);
                     }
                 }
+                else if (_selectedTag == "Polyline")
+                {
+                    PopupPolyline popup = new PopupPolyline(MyMapView);
+                    bool? result = popup.ShowDialog();
+                    //if (result == true)
+                    {
+                        if (popup.mapPoint != null && (popup.mapPoint2 != null || (popup.Bearing != -1 && popup.Distance != -1)))
+                            DrawPolyline(popup);
+                    }
+                }
                 else if (_selectedTag == "Circle")
                 {
                     PopupCircle popup = new PopupCircle(MyMapView);
@@ -561,6 +572,8 @@ namespace ArcMap.View
                             DrawRectangle(popup);
                     }
                 }
+                start_distance = start_polyline = false;
+                first = last = null;
                 _selectedTag = "";
             }
             catch(Exception)
@@ -586,13 +599,17 @@ namespace ArcMap.View
                 DeleteLayer_btn.IsEnabled = false;
                 ArrowMouse_btn.IsEnabled = false;
             }
+            start_distance = start_polyline = false;
+            first = last = null;
             _selectedTag = "";
         }
 
         private void PanMouse_btn_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Hand;
-            
+            start_distance = start_polyline = false;
+            first = last = null;
+
             try
             {
                 MyMapView.SketchEditor.CancelCommand.Execute(null);
@@ -606,6 +623,8 @@ namespace ArcMap.View
         private async void ArrowMouse_btn_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = null;
+            start_distance = start_polyline = false;
+            first = last = null;
             try
             {
                 // Allow the user to select a graphic
@@ -880,6 +899,31 @@ namespace ArcMap.View
             try
             {
                 Graphic graphic = CreateGraphic(popup.MapPoint, colors[SketchColorComboBox.SelectedIndex]);
+                _sketchOverlay.Graphics.Add(graphic);
+            }
+            catch (Exception ex)
+            {
+                // Report exceptions
+                MessageBox.Show("Error drawing graphic shape: " + ex.Message);
+            }
+        }
+        private void DrawPolyline(PopupPolyline popup)
+        {
+            try
+            {
+                // Create a geodesic buffer graphic using the same location and distance.
+                MapPoint[] arr = new MapPoint[2];
+                arr[0] = popup.mapPoint;
+                if (popup.mapPoint2 != null)
+                    arr[1] = popup.mapPoint2;
+                else
+                {
+                    arr[1] = measure_second_point(arr[0].Y, arr[0].X, popup.Distance, popup.Bearing);
+                }
+                Polyline pline = new Polyline(arr);
+                Color creationColor = colors[SketchColorComboBox.SelectedIndex];
+                // Create and add a graphic from the geometry the user drew
+                Graphic graphic = CreateGraphic(pline, creationColor);
                 _sketchOverlay.Graphics.Add(graphic);
             }
             catch (Exception ex)
@@ -1324,8 +1368,8 @@ namespace ArcMap.View
         private void Show_results(MapPoint projectedPoint)
         {
             // Format the results in strings.
-            string first_projectedCoord = string.Format("{0:F4}, {1:F4}", first.X, first.Y);
-            string last_projectedCoord = string.Format("{0:F4}, {1:F4}", projectedPoint.X, projectedPoint.Y);
+            string first_projectedCoord = string.Format("{0:F4}, {1:F4}", first.Y, first.X);
+            string last_projectedCoord = string.Format("{0:F4}, {1:F4}", projectedPoint.Y, projectedPoint.X);
 
             // show the results in the text blocks
             coordinate_text.Text = string.Format("{0} : {1} && {2}", "Coordiantes",
@@ -1347,11 +1391,10 @@ namespace ArcMap.View
             if (start_polyline && last != null)
             {
                 _distanceOverlay.Graphics.Clear();
-                _sketchOverlay.Graphics.Add(CreateGraphic(first, Color.Red));
-                _sketchOverlay.Graphics.Add(CreateGraphic(projectedPoint, Color.Red));
                 _sketchOverlay.Graphics.Add(graphic);
                 ClearLayer_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
                 ArrowMouse_btn.IsEnabled = _sketchOverlay.Graphics.Count > 0;
+                _selectedTag = "";
             }
             else
             {
@@ -1430,7 +1473,7 @@ namespace ArcMap.View
             }
             try
             {
-                GeodeticDistanceResult result = GeometryEngine.DistanceGeodetic(mapPoint1, mapPoint2, unit, AngularUnits.Degrees, GeodeticCurveType.NormalSection);
+                GeodeticDistanceResult result = GeometryEngine.DistanceGeodetic(mapPoint1, mapPoint2, unit, AngularUnits.Degrees, GeodeticCurveType.Geodesic);
                 double azimuth = (result.Azimuth1 + 360) % 360;
                 angle_text.Text = string.Format("{0} : {1:F1}", "Radial/Bearing", azimuth);
                 _distance = result.Distance;
@@ -1443,8 +1486,13 @@ namespace ArcMap.View
         private MapPoint measure_second_point(double lat1, double lon1, double distance, double bearing)
         {
             double angular_dis = distance / 6371;
+            lat1 = ToRad(lat1);
+            lon1 = ToRad(lon1);
+            bearing = ToRad(bearing);
             double lat2 = Math.Asin(Math.Sin(lat1) * Math.Cos(angular_dis) + Math.Cos(lat1) * Math.Sin(angular_dis) * Math.Cos(bearing));
             double lon2 = lon1 + Math.Atan2(Math.Sin(bearing) * Math.Sin(angular_dis) * Math.Cos(lat1), Math.Cos(angular_dis) - Math.Sin(lat1) * Math.Sin(lat2));
+            lat2 = ToDegrees(lat2);
+            lon2 = ToDegrees(lon2);
             return new MapPoint(lon2, lat2);
         }
 
@@ -1474,7 +1522,8 @@ namespace ArcMap.View
             if (e.Key == Key.Escape)
             {
                 Mouse.OverrideCursor = null;
-
+                start_distance = start_polyline = false;
+                first = last = null;
                 try
                 {
                     MyMapView.SketchEditor.CancelCommand.Execute(null);
